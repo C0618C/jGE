@@ -1,21 +1,15 @@
-class MObj extends baseObj{
+class MObj extends ShowObj{
     get target(){
-        //console.log("get TG:",this.__tg);
         return this.__tg;
     }
     set target(v){
-        //console.warn("set TG:",v);
         this.__tg = v;
     }
-    constructor(){
-        switch(arguments.length) {
-            case 1:super(arguments[0]);break;
-            case 2:super(arguments[0],arguments[1]);break;
-            default:super();break;
-        }
+    constructor(...args){
+        super(...args);
 
         //this.__tg = new Vector2D(0,0);
-        this.target = null;// new Vector2D(500,300);
+        this.target = new Vector2D(500,300);
 
         //徘徊用变量
         this.wander={
@@ -146,6 +140,7 @@ class MObj extends baseObj{
     render(c2d){
         // //c2d
         if(!false){
+            c2d.beginPath();
             c2d.strokeStyle = 'red';
             c2d.fillStyle = 'darkred';
             c2d.lineWidth = 1;
@@ -189,7 +184,6 @@ class MObj extends baseObj{
             c2d.moveTo(this.a.x,this.a.y);
             c2d.lineTo(this.b.x,this.b.y);
             c2d.lineTo(this.c.x,this.c.y);
-            c2d.closePath();
             c2d.fillStyle='blue';
             c2d.fill();
 
@@ -199,12 +193,18 @@ class MObj extends baseObj{
                 c2d.moveTo(this.x, this.y);
                 c2d.lineTo(this.target.x, this.target.y);
                 c2d.strokeStyle = 'green';
-                c2d.closePath();
                 c2d.stroke();
                 c2d.beginPath();
-                c2d.arc(this.target.x, this.target.y, 3, 0, 2 * Math.PI);
-                c2d.fillStyle = 'red';
+                c2d.strokeStyle = 'red';
+                c2d.fillStyle='black';
+                c2d.arc(this.target.x, this.target.y, 5, 0, 2 * Math.PI);
                 c2d.fill();
+                c2d.moveTo(this.target.x-10,this.target.y);
+                c2d.lineTo(this.target.x+10,this.target.y);
+                c2d.moveTo(this.target.x,this.target.y-10);
+                c2d.lineTo(this.target.x,this.target.y+10);
+                c2d.closePath();
+                c2d.stroke();
             }
         }
     }

@@ -1,17 +1,5 @@
 'use strict';
-class baseObj extends Vector2D{
-    constructor(){
-        switch(arguments.length) {
-            case 1:super(arguments[0]);break;
-            case 2:super(arguments[0],arguments[1]);break;
-            default:super();break;
-        }
-        this.isDel = false;
-    }
-    update(t){}
-    render(c){}
-}
-class jGE {
+class jGE extends ShowObj{
     //设置参数
     SetConfig(cfg) {
         this.setting = cfg;
@@ -46,12 +34,6 @@ class jGE {
 
         //运行时参数
         run.context2D =setting.dom.getContext("2d");
-        //负责处理的对象
-        run.Objects={
-            rObj:[],//渲染队列
-            uObj:[],//更新队列
-            items:new WeakSet()//对象管理
-        };
 
         //Debug工具
         run.iDBug = true;//Debug 总开关
@@ -59,7 +41,7 @@ class jGE {
             profile:false,
             showFps:true,
             maxTimeSpan:1,
-            fixSpeed:0
+            fixSpeed:0 //固定延时执行的毫秒数
         };
 
         run.curMousePoint = new Vector2D();
@@ -80,16 +62,16 @@ class jGE {
         if(run.iDBug && t>run.debug.maxTimeSpan) run.debug.maxTimeSpan = t;
         if(run.status != "run") return;
         run.timemark = new Date();
-        //TODO:逻辑更新
-        run.Objects.uObj.forEach((o,i) => {
+
+        this.Objects.uObj.forEach((o,i) => {
             if(o.isDel){
-                run.Objects.uObj.splice(i,1);
+                this.Objects.uObj.splice(i,1);
             }else{
                 o.update(t,_jGE);
             }
         });
         //清理渲染对象
-        run.Objects.rObj.every(ol=>{
+        this.Objects.rObj.every(ol=>{
             ol.forEach((o,i)=>{if(o.isDel) run.Objects.rObj.splice(i,1);});
         });
 
@@ -126,8 +108,8 @@ class jGE {
         run.context2D.fillStyle = run.bgColor;
         run.context2D.fillRect(0, 0, run.width, run.height);
 
-        //TODO:主线渲染工作
-        run.Objects.rObj.every(o=>{
+        //主线渲染工作
+        this.Objects.rObj.every(o=>{
             for(let oo of o){
                 if(oo.isDel){continue;}
                 oo.render(run.context2D);
@@ -155,7 +137,7 @@ class jGE {
         }else {
             requestAnimationFrame(function () {
                 if (run.iDBug && run.debug.profile) console.profile("render");
-                _jGE.render()
+                _jGE.render();
                 if (run.iDBug && run.debug.profile) console.profileEnd("render");
             });
         }
@@ -179,28 +161,11 @@ class jGE {
 
     //构造函数
     constructor(){
+        super();
         this.setting = {};
         const run = this.run = {};//配置了运行时的变量、参数等
         this.temp = {};
 
-        //对象管理器
-        this.ObjManager ={
-            add:function (obj) {
-                if(!run.Objects.items.has(obj)){
-                    run.Objects.items.add(obj);
-                    run.Objects.uObj.push(obj);
-                    if(obj.index == undefined) obj.index = 1;
-                    if(!Array.isArray(run.Objects.rObj[obj.index])) run.Objects.rObj[obj.index] = [];
-                    run.Objects.rObj[obj.index].push(obj);
-                }
-            },
-            del:function (obj) {
-                if(run.Objects.items.has(obj)){
-                    obj.isDel=true;
-                    run.Objects.items.delete(obj);
-                }
-            }
-        };
 
         //进行初始化
         let tempCfg = {};
