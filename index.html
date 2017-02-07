@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Steering Behaviors</title>
+    <script src="vector2d.js"></script>
+    <script src="tool.js"></script>
+    <script src="jGE.config.js"></script>
+    <script src="jGE.js"></script>
+    <script src="MObj.js"></script>
+</head>
+<body>
+<div id="view_port"></div>
+
+<script>
+    (function(){
+        let x = new jGE({keyHandler:function (e) {
+            this.temp.keyCode = e.keyCode;
+            if(e.keyCode=="13"){this.Pause();}
+        }});
+
+        x.ObjManager.add(new MObj({x:0,y:0}));
+//        x.ObjManager.add(new MObj({x:200,y:350}));
+//        x.ObjManager.add(new MObj({x:200,y:350}));
+//        x.ObjManager.add(new MObj({x:200,y:350}));
+//        x.ObjManager.add(new MObj({x:200,y:350}));
+//        x.ObjManager.add(new MObj({x:200,y:350}));
+
+        document.getElementById("view_port").appendChild(x.GetDom());
+
+        window.t  = x;
+    })();
+</script>
+
+</body>
+</html>
