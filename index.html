@@ -5,6 +5,7 @@
     <title>Steering Behaviors</title>
     <script src="lib/vector2d.js"></script>
     <script src="lib/ShowObj.js"></script>
+    <script src="lib/ResManager.js"></script>
     <script src="lib/jGE.config.js"></script>
     <script src="lib/tool.js"></script>
     <script src="lib/MObj.js"></script>
@@ -20,16 +21,33 @@
             if(e.keyCode=="13"){this.Pause();}
         }});
 
-        x.ObjManager.add(new MObj({x:0,y:0}));
+//        x.ObjManager.add(new MObj({x:0,y:0}));
 //        x.ObjManager.add(new MObj({x:200,y:350}));
 //        x.ObjManager.add(new MObj({x:200,y:350}));
 //        x.ObjManager.add(new MObj({x:200,y:350}));
 //        x.ObjManager.add(new MObj({x:200,y:350}));
 //        x.ObjManager.add(new MObj({x:200,y:350}));
+
+        
+        let p1 = new $tk_path({styleType:'fill',style:'blue',points:[[0,20],[-10,-15],[10,-15]],pos:[30,0]});
+        let p2 = new $tk_path({styleType:'fill',style:'blue',points:[[0,20],[-10,-15],[10,-15]],pos:[-30,0]});
+        let s1 = new ShowObj(300,500);
+        //s1.angle = Math.PI;
+        s1.ObjManager.add(p1);
+        s1.ObjManager.add(p2);
+        x.ObjManager.add(s1);
+
+        setInterval(()=>{s1.angle+=0.01;if(s1.angle>=2*π)s1.angle-=2*π;},32);
 
         document.getElementById("view_port").appendChild(x.GetDom());
 
         window.t  = x;
+//        LoadResources({url:"res/npc_cfg.json",success:function (r) {
+//            console.dir(r);
+//        },onprogress:function (e) {
+//            console.dir(this);
+//            console.dir(e);
+//        }})
     })();
 </script>
 
