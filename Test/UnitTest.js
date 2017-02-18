@@ -3,9 +3,10 @@ class UT{
         // this.Test_tk_Path(x);
         // this.Test_tk_Text(x);
         // this.Test_tk_Script(x);
-        this.Test_tk_video(x);
+        //this.Test_tk_video(x);
 
         //this.Test_xhr_load_img(x);
+        //this.Test_xhr_load_video(x);
     }
 
     //单独测试矢量图对象
@@ -75,9 +76,9 @@ class UT{
         let dom = document.getElementById("view_port");
         let v = document.createElement("video");
         v.setAttribute("loop","true");
-        v.setAttribute("width","320");
-        v.setAttribute("height","240");
-        v.src = "http://www.w3school.com.cn/example/html5/mov_bbb.mp4";
+        // v.setAttribute("width","320");
+        // v.setAttribute("height","240");
+        v.src = "http://iandevlin.github.io/mdn/video-player-with-captions/video/sintel-short.mp4";//http://www.w3school.com.cn/example/html5/mov_bbb.mp4";
         v.load();
 
         v.volume = 0;
@@ -85,7 +86,8 @@ class UT{
 
         v.play();
         setTimeout(f=>{
-            let i1 = new $tk_video({img:v,area:{x:-50,y:-50,width:100,height:100},sarea:{x:100,y:20,width:100,height:100}});
+            //let i1 = new $tk_video({img:v,area:{x:-50,y:-50,width:100,height:100},sarea:{x:100,y:20,width:100,height:100}});
+            let i1 = new $tk_video({video:v});
             let s1 = new ShowObj(400,200);
             i1.scale(1.25);
             s1.ObjManager.add(i1);
@@ -94,6 +96,15 @@ class UT{
         },1800);
 
         console.profileEnd("Test_tk_video_001");
+    }
+
+    //单独测试-异步加载图片信息
+    static Test_xhr_load_video(x){
+        LoadResources({url:"res/320x240.ogg",type:"video",
+            success:(video)=>{
+                document.getElementById("view_port").appendChild(video);
+            }
+        });
     }
 }
 
