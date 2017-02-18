@@ -1,8 +1,0 @@
-[{
-  "id":"npc_config_def",
-  "name": "NPC配置",
-  "type":"config",
-  "path":"./res/npc_cfg.json",
-  "scene":[0,2,5],
-  "version": "0.0.1"
-}]

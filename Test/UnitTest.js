@@ -2,8 +2,13 @@ class UT{
     static Auto_Test(x){
         // this.Test_tk_Path(x);
         // this.Test_tk_Text(x);
-        this.Test_tk_Script(x);
+        // this.Test_tk_Script(x);
+        this.Test_tk_video(x);
+
+        //this.Test_xhr_load_img(x);
     }
+
+    //单独测试矢量图对象
     static Test_tk_Path(x){
         console.info("开始执行-显示对象-路径部件测试");
         console.profile("tk_path_001");
@@ -18,6 +23,7 @@ class UT{
         console.profileEnd("tk_path_001");
     }
 
+    //单独测试-文本对象
     static Test_tk_Text(x){
         console.info("开始执行-显示对象-文本部件测试");
         console.profile("tk_text_001");
@@ -33,8 +39,9 @@ class UT{
         console.profileEnd("tk_text_001");
     }
 
+    //单独测试-精灵图
     static Test_tk_Script(x){
-        console.info("开始执行-显示对象-文本部件测试");
+        console.info("开始执行-显示对象-精灵图部件测试");
         console.profile("tk_script_001");
         let img = new Image();
 
@@ -42,7 +49,7 @@ class UT{
         img.onload = e => {
             let i1 = new $tk_sprit({img:img});
             let s1 = new ShowObj(500,300);
-            i1.scale(0.25);
+            i1.scale(1.25);
             s1.ObjManager.add(i1);
             x.ObjManager.add(s1);
 
@@ -50,6 +57,43 @@ class UT{
         }
 
         console.profileEnd("tk_script_001");
+    }
+
+    //单独测试-异步加载图片信息
+    static Test_xhr_load_img(x){
+        LoadResources({url:"res/t.jpg",type:"image",
+            success:(img)=>{
+                document.getElementById("view_port").appendChild(img);
+            }
+        });
+    }
+    
+    //单独测试-视频部件
+    static Test_tk_video(x){
+        console.info("开始执行-显示对象-视频部件测试");
+        console.profile("Test_tk_video_001");
+        let dom = document.getElementById("view_port");
+        let v = document.createElement("video");
+        v.setAttribute("loop","true");
+        v.setAttribute("width","320");
+        v.setAttribute("height","240");
+        v.src = "http://www.w3school.com.cn/example/html5/mov_bbb.mp4";
+        v.load();
+
+        v.volume = 0;
+        window.v = v;
+
+        v.play();
+        setTimeout(f=>{
+            let i1 = new $tk_video({img:v,area:{x:-50,y:-50,width:100,height:100},sarea:{x:100,y:20,width:100,height:100}});
+            let s1 = new ShowObj(400,200);
+            i1.scale(1.25);
+            s1.ObjManager.add(i1);
+            x.ObjManager.add(s1);
+            setInterval(()=>{s1.angle+=0.01;if(s1.angle<0)s1.angle+=2*π;},32);
+        },1800);
+
+        console.profileEnd("Test_tk_video_001");
     }
 }
 
