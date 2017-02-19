@@ -7,6 +7,7 @@ class UT{
 
         //this.Test_xhr_load_img(x);
         //this.Test_xhr_load_video(x);
+        this.Test_tk_Animation(x);
     }
 
     //单独测试矢量图对象
@@ -47,6 +48,7 @@ class UT{
         let img = new Image();
 
         img.src = "https://img.alicdn.com/tps/i2/TB1bNE7LFXXXXaOXFXXwFSA1XXX-292-116.png"
+        //img.src="res/x1.gif"
         img.onload = e => {
             let i1 = new $tk_sprit({img:img});
             let s1 = new ShowObj(500,300);
@@ -89,10 +91,11 @@ class UT{
             //let i1 = new $tk_video({img:v,area:{x:-50,y:-50,width:100,height:100},sarea:{x:100,y:20,width:100,height:100}});
             let i1 = new $tk_video({video:v});
             let s1 = new ShowObj(400,200);
-            i1.scale(1.25);
+            i1.scale(0.75);
             s1.ObjManager.add(i1);
             x.ObjManager.add(s1);
             setInterval(()=>{s1.angle+=0.01;if(s1.angle<0)s1.angle+=2*π;},32);
+            v.play();
         },1800);
 
         console.profileEnd("Test_tk_video_001");
@@ -105,6 +108,26 @@ class UT{
                 document.getElementById("view_port").appendChild(video);
             }
         });
+    }
+
+    //单独测试-精灵图
+    static Test_tk_Animation(x){
+        console.info("开始执行-显示对象-精灵图部件测试");
+        console.profile("tk_script_001");
+        let img = new Image();
+
+        img.src = "res/fire.jpg"
+        img.onload = e => {
+            let i1 = new $tk_animation({img:img,fps:16,frame:8,farea:{width:img.width/4,height:img.height/4}});
+            let s1 = new ShowObj(350,350);
+            i1.scale(3.25);
+            s1.ObjManager.add(i1);
+            x.ObjManager.add(s1);
+
+            //setInterval(()=>{s1.angle+=0.01;if(s1.angle<0)s1.angle+=2*π;},32);
+        }
+
+        console.profileEnd("tk_script_001");
     }
 }
 
