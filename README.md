@@ -27,3 +27,6 @@
 计划是模仿少部分我熟悉的 PC Logo 的操作指令。作为一个回忆的趣味项目。  
 
 目前处于构思阶段，理论上目前版本的jGE能完成这案例。但我想等jGE稍微更成熟点之后再做。
+
+# License
+You may use the jGE (or Steering Behaviors or Web Logo) under the MIT license. See LICENSE.
