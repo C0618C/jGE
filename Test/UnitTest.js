@@ -7,7 +7,9 @@ class UT{
 
         //this.Test_xhr_load_img(x);
         //this.Test_xhr_load_video(x);
-        this.Test_tk_Animation(x);
+        //this.Test_tk_Animation(x);
+
+        //this.Test_of_001(x);
     }
 
     //单独测试矢量图对象
@@ -50,7 +52,7 @@ class UT{
         img.src = "https://img.alicdn.com/tps/i2/TB1bNE7LFXXXXaOXFXXwFSA1XXX-292-116.png"
         //img.src="res/x1.gif"
         img.onload = e => {
-            let i1 = new $tk_sprit({img:img});
+            let i1 = new $tk_sprite({img:img});
             let s1 = new ShowObj(500,300);
             i1.scale(1.25);
             s1.ObjManager.add(i1);
@@ -113,7 +115,7 @@ class UT{
     //单独测试-精灵图
     static Test_tk_Animation(x){
         console.info("开始执行-显示对象-精灵图部件测试");
-        console.profile("tk_script_001");
+        console.profile("tk_Animation_001");
         let img = new Image();
 
         img.src = "res/fire.jpg"
@@ -127,7 +129,14 @@ class UT{
             //setInterval(()=>{s1.angle+=0.01;if(s1.angle<0)s1.angle+=2*π;},32);
         }
 
-        console.profileEnd("tk_script_001");
+        console.profileEnd("tk_Animation_001");
+    }
+
+    //测试对象工厂
+    static Test_of_001(x){
+        let ef = x.ResManager.ObjectFactory.create("@s1&npc_0001")
+        ef.AddIn({x:200,y:300})
+        x.ObjManager.add(ef)
     }
 }
 
