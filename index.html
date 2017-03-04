@@ -5,14 +5,19 @@
     <title>Steering Behaviors</title>
     <script src="lib/vector2d.js"></script>
     <script src="lib/ShowObj.js"></script>
+    <script src="lib/jGE.js"></script>
     <script src="lib/EventManager.js"></script>
     <script src="lib/ObjectFactory.js"></script>
     <script src="lib/ResManager.js"></script>
+    <script src="lib/SceneManager.js"></script>
     <script src="lib/jGE.config.js"></script>
     <script src="lib/tool.js"></script>
     <script src="lib/MObj.js"></script>
-    <script src="lib/jGE.js"></script>
     <script src="Test/UnitTest.js"></script>
+    <style>
+        * {padding: 0px;margin: 0px;}
+        body{overflow: hidden;}
+    </style>
 </head>
 <body>
 <div id="view_port"></div>
@@ -22,7 +27,8 @@
         let x = new jGE({keyHandler:function (e) {
             this.temp.keyCode = e.keyCode;
             if(e.keyCode=="13"){this.Pause();}
-        }});
+        },width:document.documentElement.clientWidth
+        ,height:document.documentElement.clientHeight});
         document.getElementById("view_port").appendChild(x.GetDom());
         window.t  = x;
 
@@ -30,6 +36,5 @@
         
     })();
 </script>
-
 </body>
 </html>
