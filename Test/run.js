@@ -53,7 +53,7 @@ http.createServer(function (req, res) {
     });
 }).listen(v_port);
 
-if(/\.(?:js|css|json|cfg|md|ico)/.test()){
+if(/\.(?:js|css|json|cfg|md|ico)/.test(fpath)){
     open(`http://127.0.0.1:${v_port}/`);
 }else{
     let tPath = fpath.replace(local,"").replace("\\","/");
