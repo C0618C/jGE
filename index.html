@@ -24,6 +24,8 @@
 
 <script>
     (function(){
+        if(typeof Symbol == typeof undefined) window.location.href = "jGE_ES5.html";
+
         let x = new jGE({keyHandler:function (e) {
             this.temp.keyCode = e.keyCode;
             if(e.keyCode=="13"){this.Pause();}

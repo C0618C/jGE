@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <title>Steering Behaviors</title>
+
+    <style>
+        * {padding: 0px;margin: 0px;}
+        body{overflow: hidden;}
+        #view_port{font-size: 30px;text-align: center;width: 100%;}
+    </style>
+</head>
+<body>
+<div id="view_port">
+ES6实时转码ES5中，约需要3～5s，请稍候。
+
+</div>
+    <script src="//cdn.bootcss.com/babel-polyfill/6.23.0/polyfill.min.js"></script>
+    <script src="//cdn.bootcss.com/babel-standalone/6.23.1/babel.min.js"></script>
+    <script type="text/babel" src="lib/vector2d.js"></script>
+    <script type="text/babel" src="lib/ShowObj.js"></script>
+    <script type="text/babel" src="lib/jGE.js"></script>
+    <script type="text/babel" src="lib/EventManager.js"></script>
+    <script type="text/babel" src="lib/ObjectFactory.js"></script>
+    <script type="text/babel" src="lib/ResManager.js"></script>
+    <script type="text/babel" src="lib/SceneManager.js"></script>
+    <script type="text/babel" src="lib/jGE.config.js"></script>
+    <script type="text/babel" src="lib/tool.js"></script>
+    <script type="text/babel" src="lib/MObj.js"></script>
+    <script type="text/babel" src="Test/UnitTest.js"></script>
+<script type="text/babel">
+    (function(){
+        let x = new jGE({keyHandler:function (e) {
+            this.temp.keyCode = e.keyCode;
+            if(e.keyCode=="13"){this.Pause();}
+        },width:document.documentElement.clientWidth
+        ,height:document.documentElement.clientHeight});
+        let vDom = document.getElementById("view_port");
+        vDom.innerHTML = "";
+        vDom.appendChild(x.GetDom());
+        window.t  = x;
+
+        UT.Auto_Test(x);
+        
+    })();
+</script>
+</body>
+</html>
