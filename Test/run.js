@@ -48,13 +48,13 @@ http.createServer(function (req, res) {
         } else {
             console.warn("获取资源失败："+pathname);
             res.writeHead(404, {"Content-Type": "text/html"});
-            res.end("<h1>404 Not Found</h1>");
+            res.end("<!DOCTYPE html><html><head><title>404</title></head><body><div style='width:465px;margin:0px auto;'><img src='test/i404.jpg'/></div></body></html>");
         }
     });
 }).listen(v_port);
 
 if(/\.(?:js|css|json|cfg|md|ico)/.test(fpath)){
-    open(`http://127.0.0.1:${v_port}/`);
+    open(`http://127.0.0.1:${v_port}/`, {app: 'chrome'});
 }else{
     let tPath = fpath.replace(local,"").replace("\\","/");
     open(`http://127.0.0.1:${v_port}`+tPath);
