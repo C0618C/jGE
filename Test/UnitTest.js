@@ -118,15 +118,16 @@ class UT{
         console.profile("tk_Animation_001");
         let img = new Image();
 
-        img.src = "res/kofu.jpg"
+        img.src = "res/h1.jpg"
         img.onload = e => {
             //let i1 = new $tk_animation({img:img,fps:16,frame:8,farea:{width:img.width/4,height:img.height/4},update:function(){this.angle+=0.01;}});
-            let i1 = new $tk_animation({img:img,fps:4,frame:20,farea:{width:img.width/5,height:img.width/5-11},update:function(){}});
+            //let i1 = new $tk_animation({img:img,fps:4,frame:20,farea:{width:img.width/5,height:img.width/5-11},update:function(){}});
+            let i1 = new $tk_animation({img:img,fps:8,frame:8,farea:{width:img.width/4,height:img.height/2},update:function(){}});
             let s1 = new ShowObj(550,350);
-            i1.scale(3.25);
+            i1.scale(1.25);
             s1.add(i1);
             x.add(s1);
-            s1.updateHandler = function(){this.angle+=0.01;}
+            //s1.updateHandler = function(){this.angle+=0.01;}
 
             //setInterval(()=>{s1.angle+=0.01;if(s1.angle<0)s1.angle+=2*π;},32);
         }

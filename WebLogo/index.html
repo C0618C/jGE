@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Web Logo</title>
+    <script src="../lib/vector2d.js"></script>
+    <script src="../lib/ShowObj.js"></script>
+    <script src="../lib/jGE.js"></script>
+    <script src="../lib/EventManager.js"></script>
+    <script src="../lib/ObjectFactory.js"></script>
+    <script src="../lib/ResManager.js"></script>
+    <script src="../lib/SceneManager.js"></script>
+    <script src="../lib/jGE.config.js"></script>
+    <script src="../lib/tool.js"></script>
+    <script src="../lib/MObj.js"></script>
+    <style>
+        * {padding: 0px 0px;margin:0px 0px;border:0px;box-sizing: border-box;}
+        body{overflow: hidden;}
+        #cmd_log{height: 222px;background-color: black;border-top: 1px solid hsla(0,0%,50%,.35);padding-left: 20px;overflow-y: auto;}
+        #cmd_in{height: 19px; border-top: 1px solid hsla(0,0%,50%,.35);padding-left: 20px;font-size: 12px;line-height: 18px;overflow: hidden;position:relative;}
+        #cmd_in::before{float: left;content: "\203A";font-size:30px;margin-left:-15px;line-height: 12px;height: 19px;}
+        #cmd_log p{color:white;}
+        #cmd_input{width: 95%;position: absolute;top:0px;height: 19px;}
+        #cmd_input:focus{outline:inherit;}
+    </style>
+</head>
+<body>
+<div id="view_port"></div>
+<div id="cmd_log"></div>
+<div id="cmd_in">
+    <input type="text" id="cmd_input" disabled="disabled"/>
+</div>
+
+<script src="../WebLogo/weblogo.js"></script>
+
+</body>
+</html>

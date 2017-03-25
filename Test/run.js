@@ -4,9 +4,11 @@ let url  = require("url"),
      path = require("path"),
      open = require('opn');
 let [v_port,local,fpath] = process.argv.splice(2);
+
 http.createServer(function (req, res) {
     var pathname=__dirname.replace(/\/|\\test/i,"")+decodeURI( url.parse(req.url).pathname);
-    console.log("请求资源："+pathname)
+    //console.log("请求资源："+pathname)
+
     if (path.extname(pathname)=="") {
         pathname+="/";
     }
@@ -48,13 +50,17 @@ http.createServer(function (req, res) {
         } else {
             console.warn("获取资源失败："+pathname);
             res.writeHead(404, {"Content-Type": "text/html"});
-            res.end("<!DOCTYPE html><html><head><title>404</title></head><body><div style='width:465px;margin:0px auto;'><img src='test/i404.jpg'/></div></body></html>");
+            res.end("<!DOCTYPE html><html><head><title>404</title></head><body><div style='width:465px;margin:0px auto;'><img src='/test/i404.jpg'/></div></body></html>");
         }
     });
 }).listen(v_port);
 
+
 if(/\.(?:js|css|json|cfg|md|ico)/.test(fpath)){
-    open(`http://127.0.0.1:${v_port}/`, {app: 'chrome'});
+    let pathDir = fpath.replace(local+"\\","").replace("\\","/");
+    pathDir = pathDir.substr(0,pathDir.lastIndexOf("/"));
+
+    open(`http://127.0.0.1:${v_port}/${pathDir}`, {app: 'chrome'});
 }else{
     let tPath = fpath.replace(local,"").replace("\\","/");
     open(`http://127.0.0.1:${v_port}`+tPath);
