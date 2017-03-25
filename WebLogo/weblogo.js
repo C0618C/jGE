@@ -1,4 +1,6 @@
-//指令对象
+/**
+ * 基本指令
+ */
 class Cmd{
     constructor(name){
         this.name = name;
@@ -11,21 +13,42 @@ class Cmd{
     set sub_cmd(cmd){this._subcmd_ = cmd;}
 }
 
+/**
+ * 绘画指令
+ */
+class DrawCmd{
+    constructor({type="path",path=[]}={}){
+        this.type = type;
+        this.path = path;
+    }
+}
+
 //词法工具
 class PCLogo{
     constructor(){
-        this.KeyWord = new Set([
-            "[","]"
-        ]);
+        this.KeyWord = new Set(["[","]"]);
 
         this.Lexical = new Map([
             ["fd",this.c1n1],["bk",this.c1n1],["lt",this.c1n1],["rt",this.c1n1],["repeat",this.repeat],
+            ["home",this.c1],["cs",this.c1],
             ["help",this.c2end],["?",this.c2end]
         ]);
 
         this.cmd_history=new Map();
+        this._cmd_map = new Map();
 
         this.__getANum = (s)=>{return /[*/\-+0-9.()]+/.test(s)?eval(s):NaN;};//计算算式
+        //加载历史命令记录
+        let h_cmd = JSON.parse(localStorage.getItem("weblogo_cmd_history"))||[];
+        for(let c of h_cmd) this.cmd_history.set(c,false);
+    }
+    i18n(st){this._cmd_map=st;}
+    
+    i18nToen(cmd){
+        for(let k of this._cmd_map.keys()){
+            cmd = cmd.replace(new RegExp(k,"g"),this._cmd_map.get(k));
+        }
+        return cmd;
     }
 
     /**
@@ -34,19 +57,21 @@ class PCLogo{
      */
     compile(cmd){
         /* repeat 24[fd 40 lt 45 fd 15 bk 15 rt 90 fd 15 bk 15  lt 45 bk 40 rt 360/24] */
+        /* repeat 2[fd 70 rt 90 repeat 360[fd 0.3 lt 1]home rt 10]  lt 10*/
 
         //预处理
-        cmd = cmd.replace(/\[/g," [ ").replace(/\]/g," ] ").toLocaleLowerCase();
+        cmd = cmd.replace(/\[/g," [ ").replace(/\]/g," ] ").replace(/\s+/g," ").toLocaleLowerCase();
+        cmd = this.i18nToen(cmd);
         cmd = cmd.replace(/(\(?)\s?(\d*)\s?([*+-/]+)\s?(\d*)\s?(\)?)/g," $1$2$3$4$5 ");//去掉运算符与数字间的空格
         
-        let rsl = null;
-        if(!this.cmd_history.has(cmd)){
+        let rsl = this.cmd_history.get(cmd);
+        if(!rsl){
             rsl = this.analysis(cmd.match(/[^\s\r\n]+/ig));
             this.cmd_history.set(cmd,rsl);
-        }else{
-            rsl = this.cmd_history.get(cmd);
-        }
 
+            //本地存档
+            localStorage.setItem("weblogo_cmd_history",JSON.stringify([...this.cmd_history.keys()]));
+        }
         return rsl;
     }
 
@@ -69,6 +94,14 @@ class PCLogo{
     }
 
     /**
+     * 单一命令模式
+     * @param {*输入流} arr 
+     * @param {*当前指令名称} word 
+     */
+    c1(arr,word){return new Cmd(word);}
+    c1end(arr,word){arr.length = 0;return new Cmd(word);}
+
+    /**
      * 命令-参数 式指令处理
      * @param {*输入流} arr 
      * @param {*当前指令名称} word 
@@ -83,7 +116,7 @@ class PCLogo{
     }
 
     /**
-     * 命令-命令 式指令，一般用于help
+     * 命令-命令 模式，如 help fd
      * @param {*输入流} arr 
      * @param {*当前指令名称} word 
      */
@@ -113,25 +146,27 @@ class PCLogo{
         _c.sub_cmd = this.analysis(arr);
         arr.push(...arr_tail);
         return _c;
-    }   
+    }
 
 }
 
 //指令逻辑控制
 class WebLogo{
-    constructor(){
+    constructor(home){
         this.La = new PCLogo();
-
-        this.sln = 2; //step longth
-
         this.fun = new Map([
             ["fd",this.fd],["bk",this.bk],["lt",this.lt],["rt",this.rt],["repeat",this.repeat]
-            ,["?",this.help],["help",this.help]
+            ,["?",this.help],["help",this.help],["home",this.home],["cs",this.cs]
         ]);
 
-        this.pos = null;
+        this.i18n = this.La.i18n.bind(this.La);
 
-        this.temp_path = [];
+        this.pos = null;
+        this.sln = 1; //step longth
+        //this.temp_path = [];
+        this.drawCmds = [];
+        this.homePos = home;
+        
     }
     
     get angle(){return this.__ag__;}
@@ -141,15 +176,21 @@ class WebLogo{
         this.__ag__ = ag;
     }
 
-    do(cmd,curAngle,pos){        
+    /**
+     * 将简单指令转换为绘画指令
+     * @param {*基本指令序列} cmd 
+     * @param {*当前角度} curAngle 
+     * @param {*当前位置} pos 
+     */
+    do(cmd,curAngle,pos){
         let cmdObj = this.La.compile(cmd);
-        
+
+        this.drawCmds = [new DrawCmd({path:[new Vector2D(pos)]})];
         this.angle = curAngle;
         this.pos = pos;
-        this.temp_path = [new Vector2D(pos)];
         this.exe(cmdObj);
 
-        return this.temp_path;
+        return this.drawCmds;//{path:this.temp_path,status:this.status};
     }
 
     exe(cmd){
@@ -161,37 +202,41 @@ class WebLogo{
     /* **************LOGO 绘画指令 ****************/
     fd(cmd){
         let ag = DEG2RAG(this.angle);
-        let curP = this.pos;
         let l = cmd._param*this.sln;
         this.pos.AddIn(new Vector2D(Math.cos(ag)*l,Math.sin(ag)*l));
-
-        this.temp_path.push(new Vector2D(this.pos));
+        //this.temp_path[this.temp_path.length - 1].push(new Vector2D(this.pos));
+        let dCmd = this.drawCmds[this.drawCmds.length - 1];
+        dCmd.path.push(new Vector2D(this.pos));
     }
     bk(cmd){
         let ag = DEG2RAG(this.angle);
-        let curP = this.pos;
         let l = cmd._param*this.sln;
         this.pos.MinusIn(new Vector2D(Math.cos(ag)*l,Math.sin(ag)*l));
-
-        this.temp_path.push(new Vector2D(this.pos));
+        //this.temp_path[this.temp_path.length - 1].push(new Vector2D(this.pos));
+        let dCmd = this.drawCmds[this.drawCmds.length - 1];
+        dCmd.path.push(new Vector2D(this.pos));
     }
-    lt(cmd){
-        //console.log(`左转 ${cmd.param} 度`);
-        this.angle -= cmd._param;
-    }
-    rt(cmd){
-        //console.log(`右转 ${cmd.param} 度`);
-        this.angle += cmd._param;
-    }
+    lt(cmd){this.angle -= cmd._param;}
+    rt(cmd){this.angle += cmd._param;}
 
     repeat(cmd){
-        //console.log("重复执行开始！");
         for(let i=0;i<cmd.param;i++){
             this.exe(cmd.sub_cmd);
         }
-        //console.log("重复执行结束！");
     }
 
+
+    /* **************LOGO 操作指令 ****************/
+    home(cmd){
+        this.angle = 0;
+        this.pos.Copy(this.homePos);
+        this.drawCmds.push(new DrawCmd({path:[new Vector2D(this.pos)]}))
+    }
+
+    cs(cmd){
+        this.drawCmds = [new DrawCmd({type:"cs"})];
+        this.home();
+    }
 
     help(cmd){
         ShowResult("TODO:show help info "+cmd.param);
@@ -200,23 +245,27 @@ class WebLogo{
 
 class GameHelper{
     constructor(gameEngine){
-        this.pclogo = new WebLogo();
+        this.version = [1,2,0]
         this.ge = gameEngine;
+        let w = this.ge.run.width/2;
+        let h = this.ge.run.height/2
+        this.pclogo = new WebLogo(new Vector2D(w,h));      
         this.cmdLength = 0;
         this.cmdIndex = 0;
-        //this.do = this.pclogo.do.bind(this.pclogo);
         this.turtle = null;
 
         this.ge.one("jGE.Scene.Logo.End",this.start.bind(this));
+
+        if(web_logo_lang){//国际化处理
+            this.pclogo.i18n(new Map(web_logo_lang.cmd));
+        }
     }
 
     get cmds(){
         let cmds = [...this.pclogo.La.cmd_history.keys()];
         if(cmds.length != this.cmdLength){
             this.cmdIndex = cmds.length;
-            this.cmdLength=cmds.length;
-
-            //TODO:在localStore里存档
+            this.cmdLength=cmds.length;            
         }
         return cmds;
     }
@@ -237,12 +286,10 @@ class GameHelper{
 
     //创建海龟
     createTurtle(){
-        let w = this.ge.run.width/2;
-        let h = this.ge.run.height/2
+        let home = this.pclogo.homePos;
         this.turtle = {
-            obj:new ShowObj(w,h),
-            home:new Vector2D(w,h),
-            pos:new Vector2D(w,h),
+            obj:new ShowObj(home),
+            pos:new Vector2D(home),
             angle:0,            //角度 0 90 180 270
             showStyle:0
             
@@ -256,15 +303,15 @@ class GameHelper{
         this.turtle.obj.index = 1000;
         this.turtle.obj.add(new $tk_font({text:'🐙',styleType:'fill',style:'rgba(255,0,0,1)',font:'16px serif',pos:[0,0]}));
         this.ge.add(this.turtle.obj);
+        this.curShowItem = [];
     }
 
     start(){
         //console.trace(this)
         this.createTurtle();
 
-
         //环境初始化
-        ShowResult("Web Logo [v1.0.0]");
+        ShowResult(`Web Logo [ver ${this.version.join(".")}]`);
         ShowResult("Copyright © VMWed.COM 2017");
         ShowResult("Try 'help' or '?' for more information.");
         ShowResult("　");
@@ -274,12 +321,29 @@ class GameHelper{
     }
 
     do(cmd){
-        let path = this.pclogo.do(cmd,this.turtle.angle,this.turtle.pos);
+        let dCmd = this.pclogo.do(cmd,this.turtle.angle,this.turtle.pos);
 
-        this.turtle.goto(this.pclogo.pos,this.pclogo.angle);        
+        this.turtle.goto(this.pclogo.pos,this.pclogo.angle);
 
         let newpath = new ShowObj(0,0);
-        newpath.add(new $tk_path({styleType:'stroke',style:"#808080 1 round round" ,points:path,pos:[0,0]}));
+        for(let dC of dCmd){
+            switch(dC.type){
+                case "path":
+                    if(dC.path.length == 1){
+                        console.debug("监控到只有一个点的路径");
+                        continue;
+                    }
+                    newpath.add(new $tk_path({styleType:'stroke',style:"#808080 1 round round" ,points:dC.path}));
+                    break;
+                case "cs":
+                    for(let s of this.curShowItem) s.isDel = true;
+                    newpath = new ShowObj(0,0);
+                    this.curShowItem = [];
+                    break;
+            }
+
+        }
+        this.curShowItem.push(newpath);
         this.ge.add(newpath);
     }
 }
