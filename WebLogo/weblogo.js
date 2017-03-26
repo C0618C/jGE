@@ -63,6 +63,7 @@ class PCLogo{
         this._cmd_map = new Map();
 
         this.__getANum = (s)=>{return /[*/\-+0-9.()]+/.test(s)?eval(s):NaN;};//计算算式
+
         //加载历史命令记录
         let h_cmd = JSON.parse(localStorage.getItem("weblogo_cmd_history"))||[];
         for(let c of h_cmd) this.cmd_history.set(c,false);
@@ -112,7 +113,7 @@ class PCLogo{
     //分析
     analysis(arr){
         //console.debug("传入分析："+arr);
-        if(arr.length ==0) return;
+        if(arr == null) return [];
 
         let word = arr.shift();
         let rsl_cmd=[];
@@ -162,7 +163,7 @@ class PCLogo{
     }
 
     rp(arr){
-        let _c = this.c1n1(arr,"repeat");
+        let _c = this.c1n1(arr,"rp");
         let tk = arr.shift();
         if(tk!=="["){
             throw new Error("Expected token [ before "+tk);
@@ -265,7 +266,7 @@ class WebLogo{
     lt(cmd){this.angle -= cmd._param;}
     rt(cmd){this.angle += cmd._param;}
 
-    repeat(cmd){
+    rp(cmd){/*repeat*/
         for(let i=0;i<cmd.param;i++){
             this.exe(cmd.sub_cmd);
         }
@@ -273,7 +274,10 @@ class WebLogo{
 
     /* **************画笔 操作指令 ****************/
     pu(){this.penDown = false;}
-    pd(){this.penDown = true;}
+    pd(){
+        this.penDown = true;
+        this.drawCmds.push(new DrawCmd({path:[new Vector2D(this.pos)]}))
+    }
 
     /* **************LOGO 操作指令 ****************/
     home(cmd){
@@ -288,7 +292,7 @@ class WebLogo{
     }
 
     help(cmd){
-        ShowResult("TODO:show help info "+cmd.param);
+        //ShowResult("TODO:show help info "+cmd.param);
     }
 }
 
@@ -305,8 +309,9 @@ class GameHelper{
 
         this.ge.one("jGE.Scene.Logo.End",this.start.bind(this));
 
-        if(web_logo_lang){//国际化处理
+        if(typeof web_logo_lang != "undefined"){//国际化处理
             this.pclogo.i18n(new Map(web_logo_lang.cmd));
+            this.errInfo = new Map(web_logo_lang.err);
         }
     }
 
@@ -360,11 +365,11 @@ class GameHelper{
         this.createTurtle();
 
         //环境初始化
-        ShowResult(`Web Logo [ver ${this.version.join(".")}]`);
-        ShowResult("Copyright © VMWed.COM 2017");
+        this.ShowResult(`Web Logo [ver ${this.version.join(".")}]`);
+        this.ShowResult("Copyright © VMWed.COM 2017");
         //ShowResult("Try 'help' or '?' for more information.");
-        ShowResult("说明（临时）：https://github.com/C0618C/jGE/blob/master/WebLogo/README.md")
-        ShowResult("　");
+        this.ShowResult("说明（临时）：https://github.com/C0618C/jGE/blob/master/WebLogo/README.md")
+        this.ShowResult("　");
         let ip_bar = document.getElementById("cmd_input");
         ip_bar.removeAttribute("disabled");
         ip_bar.focus();
@@ -383,7 +388,7 @@ class GameHelper{
                         console.debug("监控到只有一个点的路径");
                         continue;
                     }
-                    newpath.add(new $tk_path({styleType:'stroke',style:"#808080 1 round round" ,points:dC.path}));
+                    newpath.add(new $tk_path({styleType:'stroke',style:"#ffffff 1 round round" ,points:dC.path}));
                     break;
                 case "cs":
                     for(let s of this.curShowItem) s.isDel = true;
@@ -395,6 +400,21 @@ class GameHelper{
         }
         this.curShowItem.push(newpath);
         this.ge.add(newpath);
+    }
+
+    ShowResult(text,{error=false}={}){
+        let cmd_win = document.getElementById("cmd_log");
+        let p = document.createElement("p");
+        p.textContent = text;
+        if(error){
+            p.style.color="#a94442";
+            let [errcode,...errparam] = text.split("|");
+            let errText = this.errInfo.get(errcode)||errcode;
+            errparam.map((param,index)=>errText=errText.replace(new RegExp("\\$"+(index+1)),param));
+            p.textContent = errText;
+        }
+        cmd_win.appendChild(p);
+        cmd_win.scrollTop = cmd_win.scrollHeight;
     }
 }
 
@@ -419,12 +439,14 @@ class GameHelper{
     ip_bar.addEventListener("keyup",function(event){
         if(KeyMap.get(event.keyCode) == "Enter"){
             let cmd = this.value.replace(/\r|\n/," ");
-            ShowResult(cmd);            
+            
+            game.ShowResult(cmd);            
             this.value = "";
             try{
                 game.do(cmd);
             }catch(e){
-                ShowResult(e.message,{error:true});
+                game.ShowResult(e.message,{error:true});
+                console.error(e);
             }
         }else if(KeyMap.get(event.keyCode) == "Up"){
             this.value =game.getLastCmd();
@@ -437,14 +459,7 @@ class GameHelper{
     window.weblogo = x;
 })();
 
-function ShowResult(text,{error=false}={}){
-    let cmd_win = document.getElementById("cmd_log");
-    let p = document.createElement("p");
-    p.textContent = text;
-    if(error) p.style.color="#a94442";
-    cmd_win.appendChild(p);
-    cmd_win.scrollTop = cmd_win.scrollHeight;
-}
+
 
 function DEG2RAG(ag){
     return π*ag/180-π/2;//-0.5π是为了将y轴正方形朝下
