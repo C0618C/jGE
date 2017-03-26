@@ -29,7 +29,7 @@ class PCLogo{
         this.KeyWord = new Set(["[","]"]);
 
         this.Lexical = new Map([
-            ["fd",this.c1n1],["bk",this.c1n1],["lt",this.c1n1],["rt",this.c1n1],["repeat",this.repeat],
+            ["fd",this.c1n1],["bk",this.c1n1],["lt",this.c1n1],["rt",this.c1n1],["repeat",this.repeat],["rp",this.repeat],
             ["home",this.c1],["cs",this.c1],
             ["help",this.c2end],["?",this.c2end]
         ]);
@@ -134,17 +134,23 @@ class PCLogo{
             throw new Error("Expected token [ before "+tk);
         }
 
-        let arr_tail=[];
+        let lv = 0;
+        let childCMD=[];
+        let c="";
         do{
-            arr_tail.unshift(arr.pop());
-        }while(arr_tail[0]!="]" && arr.length > 0);
+            c = arr.shift();
+            if(c == "[") lv++;
+            if(c=="]") lv--;
 
-        if(arr_tail[0]!="]"){
+            if(lv >= 0) childCMD.push(c);
+        }while(arr.length>0 && lv!=-1);
+
+        if(lv>=0){
             throw new Error("Repeat Error:Unexpected end of input");
         }
-        arr_tail.shift();
-        _c.sub_cmd = this.analysis(arr);
-        arr.push(...arr_tail);
+
+        _c.sub_cmd = this.analysis(childCMD);
+
         return _c;
     }
 
@@ -245,7 +251,7 @@ class WebLogo{
 
 class GameHelper{
     constructor(gameEngine){
-        this.version = [1,2,0]
+        this.version = [1,2,1]
         this.ge = gameEngine;
         let w = this.ge.run.width/2;
         let h = this.ge.run.height/2
@@ -313,7 +319,8 @@ class GameHelper{
         //环境初始化
         ShowResult(`Web Logo [ver ${this.version.join(".")}]`);
         ShowResult("Copyright © VMWed.COM 2017");
-        ShowResult("Try 'help' or '?' for more information.");
+        //ShowResult("Try 'help' or '?' for more information.");
+        ShowResult("说明（临时）：https://github.com/C0618C/jGE/blob/master/WebLogo/README.md")
         ShowResult("　");
         let ip_bar = document.getElementById("cmd_input");
         ip_bar.removeAttribute("disabled");
