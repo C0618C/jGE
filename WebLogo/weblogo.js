@@ -1,11 +1,4 @@
 /**
- * 所有可用的指令
- */
-const COMMEND = new Set([
-    "fd","lt","rt","bk","rp","home","cs","pu","pd","setw"
-]);
-
-/**
  * 基本指令
  */
 class Cmd{
@@ -33,17 +26,38 @@ class DrawCmd{
 //词法工具
 class PCLogo{
     constructor(){
+        /**
+         * 注册无参 并终结指令
+         */
+        this.COMMEND_P0END = new Set(["stamprect","stampoval"]);
+        /**
+         * 注册无参指令
+         */
+        this.COMMEND_P0 = new Set(["pu","pd","ht","st","home","cs","draw","clean","ct"]);
+        /**
+         * 注册1参指令
+         */
+        this.COMMEND_P1 = new Set(["fd","lt","rt","bk","setw","setpc","setbg"]);
+        /**
+         * 注册1参 并终结指令
+         */
+        this.COMMEND_P1END = new Set(["help","?"]);
+        /**
+         * 注册2参指令
+         */
+        this.COMMEND_P2 = new Set([]);
+        /**
+         * 注册特殊指令(处理器与名字相同)
+         */
+        this.COMMEND_SP = new Set(["rp"]);
+        /**
+         * 所有可用的指令
+         */
+        this.COMMEND = [...this.COMMEND_P0,...this.COMMEND_P0END,...this.COMMEND_P1,...this.COMMEND_P1END,...this.COMMEND_P2,...this.COMMEND_SP];
+
         this.KeyWord = new Set(["[","]"]);
-
-        this.Lexical = new Map([
-            ["fd",this.c1n1],["bk",this.c1n1],["lt",this.c1n1],["rt",this.c1n1],["repeat",this.repeat],["rp",this.repeat],
-            ["home",this.c1],["cs",this.c1],
-            ["help",this.c2end],["?",this.c2end]
-        ]);
-
-        for(let c of COMMEND.keys()){
-            if(!this.Lexical.has(c)) this.Lexical.set(c,this.c1end);
-        }
+        this.Lexical = new Map();
+        this.__InitLexical();
 
         this.cmd_history=new Map();
         this._cmd_map = new Map();
@@ -60,6 +74,18 @@ class PCLogo{
             cmd = cmd.replace(new RegExp(k,"g"),this._cmd_map.get(k));
         }
         return cmd;
+    }
+
+    /**
+     * 给指令绑定语法格式
+     */
+    __InitLexical(){
+        //this.Lexical
+        for(let c of this.COMMEND_P0) this.Lexical.set(c,this.c1);
+        for(let c of this.COMMEND_P0END) this.Lexical.set(c,this.c1end);
+        for(let c of this.COMMEND_P1) this.Lexical.set(c,this.c1n1);
+        for(let c of this.COMMEND_P1END) this.Lexical.set(c,this.c1p1end);
+        for(let c of this.COMMEND_SP) this.Lexical.set(c,this[c]);
     }
 
     /**
@@ -128,14 +154,14 @@ class PCLogo{
      * @param {*输入流} arr 
      * @param {*当前指令名称} word 
      */
-    c2end(arr,word){
+    c1p1end(arr,word){
         let _c = new Cmd(word);
         _c.param = arr.shift();
         arr.length = 0;
         return _c;
     }
 
-    repeat(arr){
+    rp(arr){
         let _c = this.c1n1(arr,"repeat");
         let tk = arr.shift();
         if(tk!=="["){
@@ -168,25 +194,21 @@ class PCLogo{
 class WebLogo{
     constructor(home){
         this.La = new PCLogo();
-        // this.fun = new Map([
-        //     ["fd",this.fd],["bk",this.bk],["lt",this.lt],["rt",this.rt],["repeat",this.repeat]
-        //     ,["?",this.help],["help",this.help],["home",this.home],["cs",this.cs]
-        // ]);
 
         this.fun = new Map();
         let tF = (cmd)=>{throw new Error(`E00001|${cmd.name}`);}
-        for(let c of COMMEND){
+        for(let c of this.La.COMMEND){
             this.fun.set(c, this[c] || tF);            
         }
 
         this.i18n = this.La.i18n.bind(this.La);
 
+        //当前绘画环境
         this.pos = null;
         this.sln = 1; //step longth
-        //this.temp_path = [];
         this.drawCmds = [];
         this.homePos = home;
-        
+        this.penDown = true;    //落笔状态
     }
     
     get angle(){return this.__ag__;}
@@ -220,22 +242,26 @@ class WebLogo{
     }
 
     /* **************LOGO 绘画指令 ****************/
+    ___drawHelp(){
+        if(this.penDown){
+            let dCmd = this.drawCmds[this.drawCmds.length - 1];
+            dCmd.path.push(new Vector2D(this.pos));
+        }
+    }
+
     fd(cmd){
         let ag = DEG2RAG(this.angle);
         let l = cmd._param*this.sln;
         this.pos.AddIn(new Vector2D(Math.cos(ag)*l,Math.sin(ag)*l));
-        //this.temp_path[this.temp_path.length - 1].push(new Vector2D(this.pos));
-        let dCmd = this.drawCmds[this.drawCmds.length - 1];
-        dCmd.path.push(new Vector2D(this.pos));
+        this.___drawHelp();
     }
     bk(cmd){
         let ag = DEG2RAG(this.angle);
         let l = cmd._param*this.sln;
         this.pos.MinusIn(new Vector2D(Math.cos(ag)*l,Math.sin(ag)*l));
-        //this.temp_path[this.temp_path.length - 1].push(new Vector2D(this.pos));
-        let dCmd = this.drawCmds[this.drawCmds.length - 1];
-        dCmd.path.push(new Vector2D(this.pos));
+        this.___drawHelp();
     }
+
     lt(cmd){this.angle -= cmd._param;}
     rt(cmd){this.angle += cmd._param;}
 
@@ -245,6 +271,9 @@ class WebLogo{
         }
     }
 
+    /* **************画笔 操作指令 ****************/
+    pu(){this.penDown = false;}
+    pd(){this.penDown = true;}
 
     /* **************LOGO 操作指令 ****************/
     home(cmd){
@@ -395,7 +424,7 @@ class GameHelper{
             try{
                 game.do(cmd);
             }catch(e){
-                ShowResult(e,{error:true});
+                ShowResult(e.message,{error:true});
             }
         }else if(KeyMap.get(event.keyCode) == "Up"){
             this.value =game.getLastCmd();
