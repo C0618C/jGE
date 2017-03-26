@@ -20,14 +20,15 @@ rp 45 [ fd 300 rt 128 ]
 
 rp 18[rp 4[fd 60 rt 90]lt 20]
 
-
---目前失败
 repeat 8[fd 30 lt 45 repeat 4 [fd 25 rt 90] rt 45 fd 10 lt 45 repeat 4 [fd 50 rt 90] rt 45 bk 40 rt 360/8]
 
 rp 6[lt 45 rp 4[rp 9[fd 5 rt 10] rp 9[fd 5 lt 10] rt 90]rt 105]
 
 
-
+--目前不能
+to lwjx :b
+ht rt 18
+repeat 5[fd :b rt 144 fd :b rt 54 fd:b*1.9 bk :b*1.9 lt 126] end
 
 
 

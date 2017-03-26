@@ -1,7 +1,10 @@
 # Web Logo
-Web Logo 是基于jGE的一个小程序，关于jGE的内容，请到jGE页面查看。  
-Web Logo 是我在做jGE的过程中突然勾起童年记忆中的小海龟，然后立下这个案例。也是一个基于jGE的具体应用案例。  
-计划是模仿少部分我熟悉的 PC Logo 的操作指令。作为一个回忆的趣味项目。  
+> Web Logo 是基于jGE的一个小程序，关于jGE的内容，请到jGE页面查看。  
+    
+#你还记得当年的小海龟么# 或许对很多人来说，成为程序员只是偶然；但我，在多年前认识小海龟的那个下午，就已经注定了。感谢Logo语言，让我在程序员的路上越走越远。
+
+部署地址：<http://www.vmwed.com/sb/weblogo/>  
+
 
 ## 指令说明
 指令 | 参数 | 中文指令 | 举例 | 意义
@@ -20,6 +23,14 @@ setw | 无 | 笔粗 | setw 1 | 将笔粗设为1像素
   
 [*]: # "多个指令组合一起，中间用空格隔开。如：fd 100 rt 90"
 
+## 操作指引
+1. 在页面底部有指令输入栏，用于输入指令。
+1. 输入指令如 `fd 10` 并按回车，屏幕中海龟将执行向前走10步的指令。
+1. 指令的参数若为数字，则可以输入算式表达式，如 `rt 360/24` 等价于 `rt 15`。
+1. 每次可以同时输入多个指令，不同指令中间用空格隔开；多个指令组合为一个指令组。
+1. 可在指令输入栏按上、下方向键，翻查历史指令记录。
+1. 使用help指令获取指令列表，用help + 其它指令（如：`help rt`）获取对应指令的说明。
+
 ## 代码举例
 描述 | 代码
 --|--
@@ -29,20 +40,14 @@ setw | 无 | 笔粗 | setw 1 | 将笔粗设为1像素
 气球 | lt 10 repeat 2[fd 70 rt 90 repeat 360[fd 0.5 lt 1]home rt 10] 
 花纹 | repeat 15 [ lt 360/15 fd 80 repeat 20 [ fd 20 lt 45 fd 10 bk 10 rt 90 fd 10 bk 10 lt 45 bk 20 rt 360/20 ] bk 80 ]
 直线圆 | rp 45 [ fd 300 rt 128 ]
-## 操作指引
-1. 在页面底部有指令输入栏，用于输入指令。
-1. 输入指令如 `fd 10` 并按回车，屏幕中海龟将执行向前走10步的指令。
-1. 指令的参数若为数字，则可以输入算式表达式，如 `rt 360/24` 等价于 `rt 15`。
-1. 每次可以同时输入多个指令，不同指令中间用空格隔开；多个指令组合为一个指令组。
-1. 可在指令输入栏按上、下方向键，翻查历史指令记录。
-1. 使用help指令获取指令列表，用help + 其它指令（如：`help rt`）获取对应指令的说明。
+花朵 | rp 6[lt 45 rp 4[rp 9[fd 5 rt 10] rp 9[fd 5 lt 10] rt 90]rt 105]
+矩形纹 | rp 8[fd 30 lt 45 rp 4 [fd 25 rt 90] rt 45 fd 10 lt 45 rp 4 [fd 50 rt 90] rt 45 bk 40 rt 360/8]
+
+
 
 ## 颜色代码
 `setpc` 和 `setbg` 需要用到颜色代码（0-15），代码与颜色对照如下表：
-<style>
-#mcb_a tr td{width:40px;height:40px;border:1px solid gray;}
-</style>
-<table id='mcb_a'>
+<table >
 <tr><th colspan='4'>笔色、背景色</th></tr>
 <tr><td style='background-color:#000000;'>0</td><td style='background-color:#010080;'>1</td><td style='background-color:#008001;'>2</td><td style='background-color:#008081;'>3</td></tr>
 <tr><td style='background-color:#800000;'>4</td><td style='background-color:#81007f;'>5</td><td style='background-color:#7f8000;'>6</td><td style='background-color:#c0c0c0;'>7</td></tr>

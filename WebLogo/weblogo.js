@@ -1,4 +1,11 @@
 /**
+ * 所有可用的指令
+ */
+const COMMEND = new Set([
+    "fd","lt","rt","bk","rp","home","cs","pu","pd","setw"
+]);
+
+/**
  * 基本指令
  */
 class Cmd{
@@ -34,6 +41,10 @@ class PCLogo{
             ["help",this.c2end],["?",this.c2end]
         ]);
 
+        for(let c of COMMEND.keys()){
+            if(!this.Lexical.has(c)) this.Lexical.set(c,this.c1end);
+        }
+
         this.cmd_history=new Map();
         this._cmd_map = new Map();
 
@@ -56,9 +67,6 @@ class PCLogo{
      * @param {*用户输入的指令串} cmd 
      */
     compile(cmd){
-        /* repeat 24[fd 40 lt 45 fd 15 bk 15 rt 90 fd 15 bk 15  lt 45 bk 40 rt 360/24] */
-        /* repeat 2[fd 70 rt 90 repeat 360[fd 0.3 lt 1]home rt 10]  lt 10*/
-
         //预处理
         cmd = cmd.replace(/\[/g," [ ").replace(/\]/g," ] ").replace(/\s+/g," ").toLocaleLowerCase();
         cmd = this.i18nToen(cmd);
@@ -160,10 +168,16 @@ class PCLogo{
 class WebLogo{
     constructor(home){
         this.La = new PCLogo();
-        this.fun = new Map([
-            ["fd",this.fd],["bk",this.bk],["lt",this.lt],["rt",this.rt],["repeat",this.repeat]
-            ,["?",this.help],["help",this.help],["home",this.home],["cs",this.cs]
-        ]);
+        // this.fun = new Map([
+        //     ["fd",this.fd],["bk",this.bk],["lt",this.lt],["rt",this.rt],["repeat",this.repeat]
+        //     ,["?",this.help],["help",this.help],["home",this.home],["cs",this.cs]
+        // ]);
+
+        this.fun = new Map();
+        let tF = (cmd)=>{throw new Error(`E00001|${cmd.name}`);}
+        for(let c of COMMEND){
+            this.fun.set(c, this[c] || tF);            
+        }
 
         this.i18n = this.La.i18n.bind(this.La);
 
