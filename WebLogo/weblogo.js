@@ -67,7 +67,7 @@ class PCLogo{
         this.cmd_history=new Map();
         this._cmd_map = new Map();
 
-        this.__getANum = (s)=>{return /[*/\-+0-9.()]+/.test(s)?eval(s):(this.isInCustomProcess&&/^:{1}.*$/.test(s)?s:NaN);};//计算算式
+        this.__getANum = (s)=>{return /^[*/\-+0-9.()]+$/.test(s)?eval(s):(this.isInCustomProcess&&s.includes(":")?s:NaN);};//计算算式
 
         this.isInCustomProcess = false;
 
@@ -176,6 +176,14 @@ class PCLogo{
     cusprocess(arr,word){
         let c = this.CusFun.get(word);
         //TODO:完成自定义过程处理 解释参数 编译指令 执行
+        let param = arr.splice(0,c.param.length);
+        let __cmd = c.codeblock.concat();
+        for(let i = 0;i<c.param.length;i++){
+            for(let j=0;j<__cmd.length;j++){
+                __cmd[j] = __cmd[j].replace(c.param[i],param[i]);
+            }
+        }
+        return this.analysis(__cmd);
     }
 
     /**
