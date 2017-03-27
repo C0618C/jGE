@@ -36,7 +36,7 @@ setw | 无 | 笔粗 | setw 1 | 将笔粗设为1像素
 --|--
 蒲公英 | repeat 24[fd 40 lt 45 fd 15 bk 15 rt 90 fd 15 bk 15  lt 45 bk 40 rt 360/24] bk 200
 蒲公英 | 重复 24[前进 40 左转 45 前进 15 后退 15 右转 90 前进 15 后退 15  左转 45 后退 40 右转 360/24] 后退 200
-五角星 | rt 18 repeat 5 [ fd 100 rt 180-36 ]
+五角星(定义过程) | to lwjx :b rt 18 repeat 5[fd :b rt 144 fd :b rt 54 fd :b*1.9 bk :b*1.9 lt 126] end lwjx 150
 气球 | lt 10 repeat 2[fd 70 rt 90 repeat 360[fd 0.5 lt 1]home rt 10] 
 花纹 | repeat 15 [ lt 360/15 fd 80 repeat 20 [ fd 20 lt 45 fd 10 bk 10 rt 90 fd 10 bk 10 lt 45 bk 20 rt 360/20 ] bk 80 ]
 直线圆 | rp 45 [ fd 300 rt 128 ]

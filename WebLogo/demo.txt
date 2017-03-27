@@ -31,9 +31,7 @@ repeat 36[fd 3.14*10/18 rt 360/36]
 
 --目前不能
 
-to lwjx :b
-ht rt 18
-repeat 5[fd :b rt 144 fd :b rt 54 fd:b*1.9 bk :b*1.9 lt 126] end
+to lwjx :b ht rt 18 repeat 5[fd :b rt 144 fd :b rt 54 fd:b*1.9 bk :b*1.9 lt 126] end
 
 to zfx :a repeat 4[fd :a rt 90] end zfx 200
 
