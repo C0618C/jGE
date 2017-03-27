@@ -24,11 +24,18 @@ repeat 8[fd 30 lt 45 repeat 4 [fd 25 rt 90] rt 45 fd 10 lt 45 repeat 4 [fd 50 rt
 
 rp 6[lt 45 rp 4[rp 9[fd 5 rt 10] rp 9[fd 5 lt 10] rt 90]rt 105]
 
+repeat 8[fd 80 rt 45 fd 20 repeat 4[fd 50 rt 90]]
+
+repeat 36[fd 3.14*10/18 rt 360/36]
+
 
 --目前不能
+
 to lwjx :b
 ht rt 18
 repeat 5[fd :b rt 144 fd :b rt 54 fd:b*1.9 bk :b*1.9 lt 126] end
+
+to zfx :a repeat 4[fd :a rt 90] end zfx 200
 
 
 

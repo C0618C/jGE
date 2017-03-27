@@ -49,11 +49,16 @@ class PCLogo{
         /**
          * 注册特殊指令(处理器与名字相同)
          */
-        this.COMMEND_SP = new Set(["rp"]);
+        this.COMMEND_SP = new Set(["rp","to"]);
         /**
          * 所有可用的指令
          */
         this.COMMEND = [...this.COMMEND_P0,...this.COMMEND_P0END,...this.COMMEND_P1,...this.COMMEND_P1END,...this.COMMEND_P2,...this.COMMEND_SP];
+
+        /**
+         * 用户自定义过程
+         */
+        this.CusFun = new Map();
 
         this.KeyWord = new Set(["[","]"]);
         this.Lexical = new Map();
@@ -62,7 +67,9 @@ class PCLogo{
         this.cmd_history=new Map();
         this._cmd_map = new Map();
 
-        this.__getANum = (s)=>{return /[*/\-+0-9.()]+/.test(s)?eval(s):NaN;};//计算算式
+        this.__getANum = (s)=>{return /[*/\-+0-9.()]+/.test(s)?eval(s):(this.isInCustomProcess&&/^:{1}.*$/.test(s)?s:NaN);};//计算算式
+
+        this.isInCustomProcess = false;
 
         //加载历史命令记录
         let h_cmd = JSON.parse(localStorage.getItem("weblogo_cmd_history"))||[];
@@ -97,7 +104,8 @@ class PCLogo{
         //预处理
         cmd = cmd.replace(/\[/g," [ ").replace(/\]/g," ] ").replace(/\s+/g," ").toLocaleLowerCase();
         cmd = this.i18nToen(cmd);
-        cmd = cmd.replace(/(\(?)\s?(\d*)\s?([*+-/]+)\s?(\d*)\s?(\)?)/g," $1$2$3$4$5 ");//去掉运算符与数字间的空格
+        //cmd = cmd.replace(/(\(?)\s?(\d*)\s?([*+-/]+)\s?(\d*)\s?(\)?)/g," $1$2$3$4$5 ");//去掉运算符与数字间的空格
+        cmd = cmd.replace(/\(\s*/g,"(").replace(/\s*\)/g,")").replace(/\s*\*\s*/g,"*").replace(/\s*\/\s*/g,"\/").replace(/\s*\-\s*/g,"-").replace(/\s*\+\s*/g,"+");
         
         let rsl = this.cmd_history.get(cmd);
         if(!rsl){
@@ -119,7 +127,9 @@ class PCLogo{
         let rsl_cmd=[];
         if(this.KeyWord.has(word)||this.Lexical.has(word)){
             rsl_cmd.push(this.Lexical.get(word).bind(this)(arr,word));
-
+            if(arr.length>0) rsl_cmd.push(...this.analysis(arr));
+        }else if(this.CusFun.has(word)){
+            rsl_cmd.push(...this.cusprocess(arr,word));
             if(arr.length>0) rsl_cmd.push(...this.analysis(arr));
         }else{
             throw new Error("Unexpected commend "+word);
@@ -162,33 +172,65 @@ class PCLogo{
         return _c;
     }
 
-    rp(arr){
-        let _c = this.c1n1(arr,"rp");
-        let tk = arr.shift();
-        if(tk!=="["){
-            throw new Error("Expected token [ before "+tk);
-        }
+    //解释用户自定义过程
+    cusprocess(arr,word){
+        let c = this.CusFun.get(word);
+        //TODO:完成自定义过程处理 解释参数 编译指令 执行
+    }
 
+    /**
+     * 块状代码
+     * @param {*输入流} arr 
+     * @param {*指令} _c
+     * @param {*开始标记} cbegin 
+     * @param {*结束标记} cend 
+     * @param {*是否允许嵌套} nesting 
+     */
+    codeblock(arr,_c,cbegin,cend,nesting=true){
         let lv = 0;
         let childCMD=[];
         let c="";
         do{
             c = arr.shift();
-            if(c == "[") lv++;
-            if(c=="]") lv--;
+            if(c == cbegin) lv++;
+            if(c==cend) lv--;
 
             if(lv >= 0) childCMD.push(c);
+            if(lv >0 && !nesting) throw new Error(`E00002|${_c.name}`);
         }while(arr.length>0 && lv!=-1);
 
         if(lv>=0){
             throw new Error("Repeat Error:Unexpected end of input");
         }
 
+        _c.codeblock = childCMD.concat();
         _c.sub_cmd = this.analysis(childCMD);
 
         return _c;
     }
 
+    rp(arr){
+        let _c = this.c1n1(arr,"rp");
+        let tk = arr.shift();
+        if(tk!=="["){
+            throw new Error("Expected token [ before "+tk);
+        }
+        return this.codeblock(arr,_c,"[","]")
+    }
+    to(arr){
+        let _c = new Cmd("to");
+        let funName = arr.shift();
+        if(this.COMMEND.includes(funName)) throw new Error(`E00003|${funName}`);
+        _c.param = [];
+        while(/^:{1}.*$/.test(arr[0])){
+            _c.param.push(arr.shift());
+        }
+        this.isInCustomProcess = true;
+        this.codeblock(arr,_c,"to","end",false);
+        this.isInCustomProcess = false;
+        this.CusFun.set(funName,_c);
+        return _c;
+    }
 }
 
 //指令逻辑控制
@@ -277,6 +319,11 @@ class WebLogo{
     pd(){
         this.penDown = true;
         this.drawCmds.push(new DrawCmd({path:[new Vector2D(this.pos)]}))
+    }
+
+    /* ****************** 编程指令 ****************/
+    to(cmd){
+        console.log(cmd);
     }
 
     /* **************LOGO 操作指令 ****************/
