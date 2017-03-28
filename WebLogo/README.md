@@ -34,6 +34,7 @@ setw | 无 | 笔粗 | setw 1 | 将笔粗设为1像素
 ## 代码举例
 描述 | 代码
 --|--
+雨伞 | rp 180[rt 1 fd 60*pi/180] rt 90 pu fd 120 rt 90 pd rp 3[rp 180[rt 1 fd 20*pi/180] rt 180] pu fd 68 rt 90 bk 60 rt 90 pd fd 8 pu fd 40 pd fd 80 rp 180[rt 1 fd 9*pi/180] 
 蒲公英 | repeat 24[fd 40 lt 45 fd 15 bk 15 rt 90 fd 15 bk 15  lt 45 bk 40 rt 360/24] bk 200
 蒲公英 | 重复 24[前进 40 左转 45 前进 15 后退 15 右转 90 前进 15 后退 15  左转 45 后退 40 右转 360/24] 后退 200
 五角星(定义过程) | to lwjx :b rt 18 repeat 5[fd :b rt 144 fd :b rt 54 fd :b*1.9 bk :b*1.9 lt 126] end lwjx 150
@@ -44,22 +45,20 @@ setw | 无 | 笔粗 | setw 1 | 将笔粗设为1像素
 矩形纹 | rp 8[fd 30 lt 45 rp 4 [fd 25 rt 90] rt 45 fd 10 lt 45 rp 4 [fd 50 rt 90] rt 45 bk 40 rt 360/8]
 
 
-
 ## 颜色代码
 `setpc` 和 `setbg` 需要用到颜色代码（0-15），代码与颜色对照如下表：
-<table >
-<tr><th colspan='4'>笔色、背景色</th></tr>
-<tr><td style='background-color:#000000;'>0</td><td style='background-color:#010080;'>1</td><td style='background-color:#008001;'>2</td><td style='background-color:#008081;'>3</td></tr>
-<tr><td style='background-color:#800000;'>4</td><td style='background-color:#81007f;'>5</td><td style='background-color:#7f8000;'>6</td><td style='background-color:#c0c0c0;'>7</td></tr>
-<tr><td style='background-color:#808080;'>8</td><td style='background-color:#0000fe;'>9</td><td style='background-color:#00ff01;'>10</td><td style='background-color:#00ffff;'>11</td></tr>
-<tr><td style='background-color:#fe0000;'>12</td><td style='background-color:#ff00fa;'>13</td><td style='background-color:#ffff00;'>14</td><td style='background-color:#ffffff;'>15</td></tr>
-</table>
+	 0  black	 1  blue	 2  green	 3  cyan
+	 4  red		 5  magenta	 6  yellow	 7 white
+	 8  brown	 9  tan		10  forest	11  aqua
+	12  salmon	13  purple	14  orange	15  grey
 
 ## TODO List
 * 支持指令 setw、setbg、setpc、ht、st、ct、clean、draw
 * 支持指令 wait、random
 * 支持多行录入、行尾;注释
-* 根据浏览器语言自动本地化
+* ~~根据浏览器语言自动本地化~~
+* help指令
+* 换成海龟
 
 ## 版本记录
 * v1.5.0　　2017-03-28  

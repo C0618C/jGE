@@ -9,7 +9,7 @@ http.createServer(function (req, res) {
     var pathname=__dirname.replace(/\/|\\test/i,"")+decodeURI( url.parse(req.url).pathname);
     //console.log("请求资源："+pathname)
 
-    if (path.extname(pathname)=="") {
+    if (path.extname(pathname)==""&&!pathname.includes("helpfiles")) {
         pathname+="/";
     }
     if (pathname.charAt(pathname.length-1)=="/"){
@@ -19,6 +19,9 @@ http.createServer(function (req, res) {
     fs.exists(pathname,function(exists){
         if(exists){
             switch(path.extname(pathname)){
+                case "":
+                    res.writeHead(200, {"Content-Type": "text/plain"});
+                    break;
                 case ".html":
                     res.writeHead(200, {"Content-Type": "text/html"});
                     break;

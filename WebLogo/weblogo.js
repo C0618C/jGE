@@ -1,4 +1,9 @@
 /**
+ * 兼容Logo的变量
+ */
+let pi = π;
+
+/**
  * 基本指令
  */
 class Cmd{
@@ -70,7 +75,12 @@ class PCLogo{
         /* 转义、国际化翻译用字典 */
         this._cmd_map = new Map([["repeat","rp"],["\\?","help"]]);
 
-        this.__getANum = (s)=>{return /^[*/\-+0-9.()]+$/.test(s)?eval(s):(this.isInCustomProcess&&s.includes(":")?s:NaN);};//计算算式
+        this.__getANum = (s)=>{
+            let rsl = NaN;
+            if(this.isInCustomProcess&&s.includes(":")) rsl = s;
+            else try{rsl = eval(s)}catch(e){}
+            return rsl;
+        };
 
         this.isInCustomProcess = false;
 
@@ -249,6 +259,7 @@ class PCLogo{
 class WebLogo{
     constructor(home){
         this.La = new PCLogo();
+        Object.assign(this,exFun);
 
         this.fun = new Map();
         let tF = (cmd)=>{throw new Error(`E00001|${cmd.name}`);}
@@ -351,13 +362,27 @@ class WebLogo{
     }
 
     help(cmd){
-        //ShowResult("TODO:show help info "+cmd.param);
+        if(typeof this.__helpRsl == "undefined") this.__helpRsl = new Map();
+        let r = this.__helpRsl.get(cmd.param);
+        if(r == undefined){
+             r = new DrawCmd({type:"help"});
+             r.help_text="Loading...";
+             if(!cmd.param){
+                 r.help_text="<span class='help_cmd'>"+this.La.COMMEND.sort().join("</span><span class='help_cmd'>").toUpperCase()+"</span>";
+             }else{
+                //  GetURL({url:`../WebLogo/helpfiles/${cmd.param}`,type:"text"})
+                //  .then((t)=>{r.help_text=`<pre>${t}</pre>`}).catch((t)=>{throw new Error(t)});
+                LoadResources({url:`../WebLogo/helpfiles/${cmd.param}`,success:(t)=>{r.help_text=`<pre>${t}</pre>`},error:(t)=>{throw new Error(t)},async:false})
+             }
+             this.__helpRsl.set(cmd.param,r);
+        }
+        this.drawCmds = [r];
     }
 }
 
 class GameHelper{
     constructor(gameEngine){
-        this.version = [1,5,0]
+        this.version = [1,6,0]
         this.ge = gameEngine;
         let w = this.ge.run.width/2;
         let h = this.ge.run.height/2
@@ -456,6 +481,11 @@ class GameHelper{
                     newpath = new ShowObj(0,0);
                     this.curShowItem = [];
                     break;
+                case "help":
+                    this.ShowResult(dC.help_text,{help:true});
+                    this.dCmd = [];
+                    return;
+                    break;
             }
 
         }
@@ -463,7 +493,7 @@ class GameHelper{
         this.ge.add(newpath);
     }
 
-    ShowResult(text,{error=false}={}){
+    ShowResult(text,{error=false,help=false}={}){
         let cmd_win = document.getElementById("cmd_log");
         let p = document.createElement("p");
         p.textContent = text;
@@ -473,6 +503,8 @@ class GameHelper{
             let errText = this.errInfo.get(errcode)||errcode;
             errparam.map((param,index)=>errText=errText.replace(new RegExp("\\$"+(index+1)),param));
             p.textContent = errText;
+        }else if(help){
+            p.innerHTML = text;
         }
         cmd_win.appendChild(p);
         cmd_win.scrollTop = cmd_win.scrollHeight;
@@ -480,16 +512,17 @@ class GameHelper{
 
     l10n(){
         let curLang = navigator.language;
-        if(curLang.includes("en")) return;
-        curLang = "ru";
-        LoadResources({url:`../WebLogo/i18n/${curLang}.js`,type:"script",success:()=>{
+        if(curLang.includes("en")) return;        //curLang = "ru";     //测试的俄语
+        GetURL({url:`../WebLogo/i18n/${curLang}.js`,type:"script"})
+        .then((rsl)=>{
             if(typeof web_logo_i18n != "undefined"){//本地化处理
                 this.pclogo.i18n(web_logo_i18n.cmd);
                 this.errInfo = new Map([...this.errInfo,...web_logo_i18n.err]);
                 console.debug(`已装载本地语言：${web_logo_i18n.name}。`);
                 web_logo_i18n = null;
             }
-        },error:(e)=>{console.warn(`本地化失败:找不到语言${curLang}.`)}});
+        })
+        .catch((e)=>console.warn(`本地化失败:找不到语言${curLang}.`));
     }
 }
 
@@ -497,14 +530,14 @@ class GameHelper{
     let KeyMap = new Map([[13,"Enter"],[38,"Up"],[40,"Down"]]);
 
     let cmd_show_height=222+20;
-    let myHeight = document.documentElement.clientHeight-cmd_show_height;
+    let myHeight = document.documentElement.clientHeight-cmd_show_height+130;
     let x = new jGE({width:document.documentElement.clientWidth,height:myHeight});
     let game = new GameHelper(x);
 
-    let vp = document.getElementById("view_port")
+    let vp = document.getElementById("view_port");
     vp.appendChild(x.GetDom());
     vp.style.height = myHeight+"px";
-    
+    document.getElementById("cmd").style.width=document.documentElement.clientWidth+"px";
     let cmd_win = document.getElementById("cmd_log");
     cmd_win.style.width = document.documentElement.clientWidth+20+"px";
     let ip_bar = document.getElementById("cmd_input");
@@ -528,10 +561,8 @@ class GameHelper{
     });
     
     //DEBUG:抛出Weblogo
-    window.weblogo = x;
+    window.weblogo = game;
 })();
-
-
 
 function DEG2RAG(ag){
     return π*ag/180-π/2;//-0.5π是为了将y轴正方形朝下

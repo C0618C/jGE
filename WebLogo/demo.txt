@@ -42,6 +42,22 @@ to spiral :size
    spiral :size *1.02    ; the tailend recursive call
 end
 
+to t3
+bk 70 fd 70
+repeat 2[repeat 90[fd 50*pi/180 rt 1] rt 90]
+repeat 2[repeat 90[fd 50*pi/180 lt 1] lt 90]
+pu fd 50 pd
+stampoval 10 10
+end
+
+to t1
+repeat 3[fd 50 rt 120]
+pu fd 25 rt 90 fd 45 rt 90 fd 50 rt 180 pd
+repeat 3[fd 100 rt 120]
+pu fd 50 rt 90 fd 55 pd
+stampoval 5 5 ht
+end
+
 
 TO MHDZ :N  ;
   DRAW HT
