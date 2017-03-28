@@ -55,8 +55,17 @@ setw | 无 | 笔粗 | setw 1 | 将笔粗设为1像素
 <tr><td style='background-color:#fe0000;'>12</td><td style='background-color:#ff00fa;'>13</td><td style='background-color:#ffff00;'>14</td><td style='background-color:#ffffff;'>15</td></tr>
 </table>
 
+## TODO List
+* 支持指令 setw、setbg、setpc、ht、st、ct、clean、draw
+* 支持指令 wait、random
+* 支持多行录入、行尾;注释
+* 根据浏览器语言自动本地化
 
 ## 版本记录
+* v1.4.0　　2017-03-26  
+    支持To ... END方式自定义过程；修复复杂算术表达式分词失败问题；
+* v1.3.0　　2017-03-27  
+    加入pu pd指令；
 * v1.2.0　　2017-03-26  
     优化内部指令描述；增加home，cs指令支持；记录历史指令；
 * v1.1.0　　2017-03-25  

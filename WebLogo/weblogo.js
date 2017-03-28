@@ -37,7 +37,7 @@ class PCLogo{
         /**
          * 注册1参指令
          */
-        this.COMMEND_P1 = new Set(["fd","lt","rt","bk","setw","setpc","setbg"]);
+        this.COMMEND_P1 = new Set(["fd","lt","rt","bk","setw","setpc","setbg","random","wait"]);
         /**
          * 注册1参 并终结指令
          */
@@ -180,7 +180,7 @@ class PCLogo{
         let __cmd = c.codeblock.concat();
         for(let i = 0;i<c.param.length;i++){
             for(let j=0;j<__cmd.length;j++){
-                __cmd[j] = __cmd[j].replace(c.param[i],param[i]);
+                __cmd[j] = __cmd[j].replace(new RegExp(c.param[i],"g"),param[i]);
             }
         }
         return this.analysis(__cmd);
@@ -353,7 +353,7 @@ class WebLogo{
 
 class GameHelper{
     constructor(gameEngine){
-        this.version = [1,2,1]
+        this.version = [1,4,1]
         this.ge = gameEngine;
         let w = this.ge.run.width/2;
         let h = this.ge.run.height/2
@@ -364,10 +364,7 @@ class GameHelper{
 
         this.ge.one("jGE.Scene.Logo.End",this.start.bind(this));
 
-        if(typeof web_logo_lang != "undefined"){//国际化处理
-            this.pclogo.i18n(new Map(web_logo_lang.cmd));
-            this.errInfo = new Map(web_logo_lang.err);
-        }
+        this.l10n();
     }
 
     get cmds(){
@@ -420,7 +417,7 @@ class GameHelper{
         this.createTurtle();
 
         //环境初始化
-        this.ShowResult(`Web Logo [ver ${this.version.join(".")}]`);
+        this.ShowResult(`Welcome to Web Logo [ver ${this.version.join(".")}]`);
         this.ShowResult("Copyright © VMWed.COM 2017");
         //ShowResult("Try 'help' or '?' for more information.");
         this.ShowResult("说明（临时）：https://github.com/C0618C/jGE/blob/master/WebLogo/README.md")
@@ -470,6 +467,16 @@ class GameHelper{
         }
         cmd_win.appendChild(p);
         cmd_win.scrollTop = cmd_win.scrollHeight;
+    }
+
+    l10n(){
+        let curLang = navigator.language;
+        LoadResources({url:`../WebLogo/i18n/${curLang}.js`,type:"script",success:()=>{
+            if(typeof web_logo_lang != "undefined"){//本地化处理
+                this.pclogo.i18n(new Map(web_logo_lang.cmd));
+                this.errInfo = new Map(web_logo_lang.err);
+            }
+        }});
     }
 }
 
