@@ -23,6 +23,7 @@ class DrawCmd{
     }
 }
 
+
 //词法工具
 class PCLogo{
     constructor(){
@@ -65,7 +66,9 @@ class PCLogo{
         this.__InitLexical();
 
         this.cmd_history=new Map();
-        this._cmd_map = new Map();
+        
+        /* 转义、国际化翻译用字典 */
+        this._cmd_map = new Map([["repeat","rp"],["\\?","help"]]);
 
         this.__getANum = (s)=>{return /^[*/\-+0-9.()]+$/.test(s)?eval(s):(this.isInCustomProcess&&s.includes(":")?s:NaN);};//计算算式
 
@@ -75,7 +78,8 @@ class PCLogo{
         let h_cmd = JSON.parse(localStorage.getItem("weblogo_cmd_history"))||[];
         for(let c of h_cmd) this.cmd_history.set(c,false);
     }
-    i18n(st){this._cmd_map=st;}
+
+    i18n(st){this._cmd_map=new Map([...this._cmd_map,...st]);}
     
     i18nToen(cmd){
         for(let k of this._cmd_map.keys()){
@@ -353,7 +357,7 @@ class WebLogo{
 
 class GameHelper{
     constructor(gameEngine){
-        this.version = [1,4,1]
+        this.version = [1,5,0]
         this.ge = gameEngine;
         let w = this.ge.run.width/2;
         let h = this.ge.run.height/2
@@ -363,6 +367,12 @@ class GameHelper{
         this.turtle = null;
 
         this.ge.one("jGE.Scene.Logo.End",this.start.bind(this));
+
+        this.errInfo =new Map([
+                    ["E00001","Comment '$1' not supported,maybe you can try it on the latest version."]
+                    ,["E00002","Comment '$1' can't be nesting,try help $1 for more information."]
+                    ,["E00003","'$1' is already in use. Try a different name."]
+                ]);
 
         this.l10n();
     }
@@ -413,7 +423,6 @@ class GameHelper{
     }
 
     start(){
-        //console.trace(this)
         this.createTurtle();
 
         //环境初始化
@@ -471,12 +480,16 @@ class GameHelper{
 
     l10n(){
         let curLang = navigator.language;
+        if(curLang.includes("en")) return;
+        curLang = "ru";
         LoadResources({url:`../WebLogo/i18n/${curLang}.js`,type:"script",success:()=>{
-            if(typeof web_logo_lang != "undefined"){//本地化处理
-                this.pclogo.i18n(new Map(web_logo_lang.cmd));
-                this.errInfo = new Map(web_logo_lang.err);
+            if(typeof web_logo_i18n != "undefined"){//本地化处理
+                this.pclogo.i18n(web_logo_i18n.cmd);
+                this.errInfo = new Map([...this.errInfo,...web_logo_i18n.err]);
+                console.debug(`已装载本地语言：${web_logo_i18n.name}。`);
+                web_logo_i18n = null;
             }
-        }});
+        },error:(e)=>{console.warn(`本地化失败:找不到语言${curLang}.`)}});
     }
 }
 
@@ -484,10 +497,7 @@ class GameHelper{
     let KeyMap = new Map([[13,"Enter"],[38,"Up"],[40,"Down"]]);
 
     let cmd_show_height=222+20;
-    //let web_logo = new WebLogo();
-    
     let myHeight = document.documentElement.clientHeight-cmd_show_height;
-
     let x = new jGE({width:document.documentElement.clientWidth,height:myHeight});
     let game = new GameHelper(x);
 
