@@ -43,7 +43,7 @@ class PCLogo{
         /**
          * 注册1参指令
          */
-        this.COMMEND_P1 = new Set(["fd","lt","rt","bk","setw","setpc","setbg","random","wait"]);
+        this.COMMEND_P1 = new Set(["fd","lt","rt","bk","setw","setpc","test","random","wait"]);
         /**
          * 注册1参 并终结指令
          */
@@ -53,13 +53,17 @@ class PCLogo{
          */
         this.COMMEND_P2 = new Set([]);
         /**
+         * 注册可变数量数字参数指令
+         */
+        this.COMMEND_PNLIST = new Set(["setbg"]);
+        /**
          * 注册特殊指令(处理器与名字相同)
          */
         this.COMMEND_SP = new Set(["rp","to"]);
         /**
          * 所有可用的指令
          */
-        this.COMMEND = [...this.COMMEND_P0,...this.COMMEND_P0END,...this.COMMEND_P1,...this.COMMEND_P1END,...this.COMMEND_P2,...this.COMMEND_SP];
+        this.COMMEND = [...this.COMMEND_P0,...this.COMMEND_P0END,...this.COMMEND_P1,...this.COMMEND_P1END,...this.COMMEND_P2,...this.COMMEND_PNLIST,...this.COMMEND_SP];
 
         /**
          * 用户自定义过程
@@ -72,8 +76,8 @@ class PCLogo{
 
         this.cmd_history=new Map();
         
-        /* 转义、国际化翻译用字典 */
-        this._cmd_map = new Map([["repeat","rp"],["\\?","help"]]);
+        /* 转义、国际化翻译用字典 *//*NOTE: 全称命令化简配置*/
+        this._cmd_map = new Map([["repeat","rp"],["\\?","help"],["right","rt"],["left","lt"],["forward","fd"],["back","bk"]]);
 
         this.__getANum = (s)=>{
             let rsl = NaN;
@@ -107,6 +111,7 @@ class PCLogo{
         for(let c of this.COMMEND_P0END) this.Lexical.set(c,this.c1end);
         for(let c of this.COMMEND_P1) this.Lexical.set(c,this.c1n1);
         for(let c of this.COMMEND_P1END) this.Lexical.set(c,this.c1p1end);
+        for(let c of this.COMMEND_PNLIST) this.Lexical.set(c,this.c1plist);
         for(let c of this.COMMEND_SP) this.Lexical.set(c,this[c]);
     }
 
@@ -118,7 +123,6 @@ class PCLogo{
         //预处理
         cmd = cmd.replace(/\[/g," [ ").replace(/\]/g," ] ").replace(/\s+/g," ").toLocaleLowerCase();
         cmd = this.i18nToen(cmd);
-        //cmd = cmd.replace(/(\(?)\s?(\d*)\s?([*+-/]+)\s?(\d*)\s?(\)?)/g," $1$2$3$4$5 ");//去掉运算符与数字间的空格
         cmd = cmd.replace(/\(\s*/g,"(").replace(/\s*\)/g,")").replace(/\s*\*\s*/g,"*").replace(/\s*\/\s*/g,"\/").replace(/\s*\-\s*/g,"-").replace(/\s*\+\s*/g,"+");
         
         let rsl = this.cmd_history.get(cmd);
@@ -186,10 +190,22 @@ class PCLogo{
         return _c;
     }
 
+    //数字参数列
+    c1plist(arr,word){
+        let _c=new Cmd(word);
+        _c.param=[];
+        do{
+            let num = this.__getANum(arr[0]);
+            if(Object.is(NaN)) break;
+            _c.param.push(num);
+            arr.shift();
+        }while(arr.length>0)
+        return _c;
+    }
+
     //解释用户自定义过程
     cusprocess(arr,word){
         let c = this.CusFun.get(word);
-        //TODO:完成自定义过程处理 解释参数 编译指令 执行
         let param = arr.splice(0,c.param.length);
         let __cmd = c.codeblock.concat();
         for(let i = 0;i<c.param.length;i++){
@@ -222,7 +238,7 @@ class PCLogo{
         }while(arr.length>0 && lv!=-1);
 
         if(lv>=0){
-            throw new Error("Repeat Error:Unexpected end of input");
+            throw new Error(`E00004|${cend}`);
         }
 
         _c.codeblock = childCMD.concat();
@@ -269,7 +285,18 @@ class WebLogo{
 
         this.i18n = this.La.i18n.bind(this.La);
 
+        //常量设置
+        /*
+            0  black	 1  blue	 2  green	 3  cyan
+            4  red		 5  magenta	 6  yellow	 7 white
+            8  brown	 9  tan		10  forest	11  aqua
+            12  salmon	13  purple	14  orange	15  grey
+        */
+        this.color_list = ["black","blue","green","cyan","red","magenta","yellow","white","brown","tan","forest","aqua","salmon","purple","orange","grey"];
+
+
         //当前绘画环境
+        this.bgColor = "black";
         this.pos = null;
         this.sln = 1; //step longth
         this.drawCmds = [];
@@ -343,6 +370,18 @@ class WebLogo{
         this.penDown = true;
         this.drawCmds.push(new DrawCmd({path:[new Vector2D(this.pos)]}))
     }
+    setbg(cmd){
+        if(cmd._param.length == 1&& cmd._param[0]>=0&&cmd._param[0]<this.color_list.length){
+            this.bgColor= this.color_list[cmd._param[0]];
+        }else if(cmd._param.length == 3&&Math.max(...cmd._param)<=100){
+            let r = Math.floor(255*cmd._param[0]/100);
+            let g = Math.floor(255*cmd._param[1]/100);
+            let b = Math.floor(255*cmd._param[2]/100);
+            this.bgColor = `rgba(${r},${g},${b},1)`;
+        }else{
+            throw new Error("E00005");
+        }
+    }
 
     /* ****************** 编程指令 ****************/
     to(cmd){
@@ -365,27 +404,24 @@ class WebLogo{
         if(typeof this.__helpRsl == "undefined") this.__helpRsl = new Map();
         let r = this.__helpRsl.get(cmd.param);
         if(r == undefined){
-            console.log(1);
              r = new DrawCmd({type:"help"});
              r.help_text="Loading...";
              if(!cmd.param){
                  r.help_text="<span class='help_cmd'>"+this.La.COMMEND.sort().join("</span><span class='help_cmd'>").toUpperCase()+"</span>";
              }else{
-                 await GetURL({url:`../WebLogo/helpfiles/${cmd.param}.txt`,type:"text",method:"GET",async:false})
-                 .then((t)=>{console.log(2);r.help_text=`<pre>${t}</pre>`}).catch((t)=>{throw new Error(t)});
-                //LoadResources({url:`../WebLogo/helpfiles/${cmd.param}.txt`,success:(t)=>{r.help_text=`<pre>${t}</pre>`},error:(t)=>{throw new Error(t)},async:false})
+                /* await GetURL({url:`../WebLogo/helpfiles/${cmd.param}.txt`,type:"text",method:"GET",async:false})
+                 .then((t)=>{console.log(2);r.help_text=`<pre>${t}</pre>`}).catch((t)=>{throw new Error(t)});*/
+                LoadResources({url:`../WebLogo/helpfiles/${cmd.param}.txt`,success:(t)=>{r.help_text=`<pre>${t}</pre>`},error:(t)=>{throw new Error(t)},async:false})
              }
              this.__helpRsl.set(cmd.param,r);
-             console.log(3);
         }
         this.drawCmds = [r];
-        console.log(4,JSON.stringify(this.drawCmds));
     }
 }
 
 class GameHelper{
     constructor(gameEngine){
-        this.version = [1,6,0]
+        this.version = [1,7,0]
         this.ge = gameEngine;
         let w = this.ge.run.width/2;
         let h = this.ge.run.height/2
@@ -396,10 +432,13 @@ class GameHelper{
 
         this.ge.one("jGE.Scene.Logo.End",this.start.bind(this));
 
+        //NOTE: 默认ERROR信息配置
         this.errInfo =new Map([
                     ["E00001","Comment '$1' not supported,maybe you can try it on the latest version."]
                     ,["E00002","Comment '$1' can't be nesting,try help $1 for more information."]
                     ,["E00003","'$1' is already in use. Try a different name."]
+                    ,["E00004","SyntaxError:missing '$1' after commends."]
+                    ,["E00005","Error:illegal of color setting,."]
                 ]);
 
         this.l10n();
@@ -456,7 +495,7 @@ class GameHelper{
         //环境初始化
         this.ShowResult(`Welcome to Web Logo [ver ${this.version.join(".")}]`);
         this.ShowResult("Copyright © VMWed.COM 2017");
-        //ShowResult("Try 'help' or '?' for more information.");
+        this.ShowResult("Try 'help' or '?' for more information.");
         this.ShowResult("说明（临时）：https://github.com/C0618C/jGE/blob/master/WebLogo/README.md")
         this.ShowResult("　");
         let ip_bar = document.getElementById("cmd_input");
@@ -485,7 +524,6 @@ class GameHelper{
                     this.curShowItem = [];
                     break;
                 case "help":
-                    console.log(5,JSON.stringify(dC));
                     this.ShowResult(dC.help_text,{help:true});
                     this.dCmd = [];
                     return;
@@ -495,6 +533,7 @@ class GameHelper{
         }
         this.curShowItem.push(newpath);
         this.ge.add(newpath);
+        this.ge.backgroundColor = this.pclogo.bgColor;
     }
 
     ShowResult(text,{error=false,help=false}={}){
@@ -506,7 +545,7 @@ class GameHelper{
             let [errcode,...errparam] = text.split("|");
             let errText = this.errInfo.get(errcode)||errcode;
             errparam.map((param,index)=>errText=errText.replace(new RegExp("\\$"+(index+1)),param));
-            p.textContent = errText;
+            p.innerHTML = errText;
         }else if(help){
             p.innerHTML = text;
         }

@@ -18,15 +18,15 @@
         body{overflow: hidden;}
         #main{overflow: hidden;position: relative;}
         #main #view_port{position: fixed;top: 0px;left: 0px;}
-        #cmd{position: fixed;bottom: 1px;left:1px;overflow: hidden;}
+        #cmd{position: fixed;bottom: 1px;left:0px;overflow: hidden;}
         #cmd_log{height: 222px;background-color: black;border-top: 3px solid hsla(0,0%,50%,.35);padding-left: 20px;overflow-y: auto;}
         #cmd_in{height: 19px; border-top: 1px solid hsla(0,0%,50%,.35);padding-left: 20px;font-size: 12px;line-height: 18px;overflow: hidden;position:relative;}
         #cmd_in::before{float: left;content: "\203A";font-size:30px;margin-left:-15px;line-height: 12px;height: 19px;}
-        #cmd_log p{color:white;}
-        #cmd_log p pre{font-size: 1.4em;}
+        #cmd_log p{color:white;padding-bottom: 5px;}
+        #cmd_log p pre{font-size: 1.4em;margin-left:15px; }
         #cmd_input{width: 95%;position: absolute;top:0px;height: 19px;}
         #cmd_input:focus{outline:inherit;}
-        #cmd_log .help_cmd,#cmd_log .HELP_CMD{display: inline-block;width:130px;}
+        #cmd_log .help_cmd,#cmd_log .HELP_CMD{display: inline-block;width:120px;margin-left:15px;}
     </style>
 </head>
 <body>
