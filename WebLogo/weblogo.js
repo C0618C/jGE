@@ -361,22 +361,25 @@ class WebLogo{
         this.home();
     }
 
-    help(cmd){
+    async help(cmd){
         if(typeof this.__helpRsl == "undefined") this.__helpRsl = new Map();
         let r = this.__helpRsl.get(cmd.param);
         if(r == undefined){
+            console.log(1);
              r = new DrawCmd({type:"help"});
              r.help_text="Loading...";
              if(!cmd.param){
                  r.help_text="<span class='help_cmd'>"+this.La.COMMEND.sort().join("</span><span class='help_cmd'>").toUpperCase()+"</span>";
              }else{
-                //  GetURL({url:`../WebLogo/helpfiles/${cmd.param}`,type:"text"})
-                //  .then((t)=>{r.help_text=`<pre>${t}</pre>`}).catch((t)=>{throw new Error(t)});
-                LoadResources({url:`../WebLogo/helpfiles/${cmd.param}`,success:(t)=>{r.help_text=`<pre>${t}</pre>`},error:(t)=>{throw new Error(t)},async:false})
+                 await GetURL({url:`../WebLogo/helpfiles/${cmd.param}.txt`,type:"text",method:"GET",async:false})
+                 .then((t)=>{console.log(2);r.help_text=`<pre>${t}</pre>`}).catch((t)=>{throw new Error(t)});
+                //LoadResources({url:`../WebLogo/helpfiles/${cmd.param}.txt`,success:(t)=>{r.help_text=`<pre>${t}</pre>`},error:(t)=>{throw new Error(t)},async:false})
              }
              this.__helpRsl.set(cmd.param,r);
+             console.log(3);
         }
         this.drawCmds = [r];
+        console.log(4,JSON.stringify(this.drawCmds));
     }
 }
 
@@ -482,6 +485,7 @@ class GameHelper{
                     this.curShowItem = [];
                     break;
                 case "help":
+                    console.log(5,JSON.stringify(dC));
                     this.ShowResult(dC.help_text,{help:true});
                     this.dCmd = [];
                     return;
