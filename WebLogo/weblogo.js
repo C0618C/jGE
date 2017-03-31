@@ -27,6 +27,19 @@ class DrawCmd{
         this.path = path;
     }
 }
+/**
+ * 画笔状态
+ */
+class PenStatu{
+    constructor(pos){
+        this.penDown = true;        //落笔状态
+        this.penColor = "white";
+        this.penWidth = 1;
+        this.pos= pos;
+        this.angle=0;
+        this.isShow = true;
+    }
+}
 
 
 //词法工具
@@ -55,15 +68,15 @@ class PCLogo{
         /**
          * 注册可变数量数字参数指令
          */
-        this.COMMEND_PNLIST = new Set(["setbg"]);
+        this.COMMEND_P1LIST3 = new Set(["setbg","setpc"]);
         /**
          * 注册特殊指令(处理器与名字相同)
          */
-        this.COMMEND_SP = new Set(["rp","to"]);
+        this.COMMEND_SP = new Set(["rp","to","ask","tell","tellall","each"]);
         /**
          * 所有可用的指令
          */
-        this.COMMEND = [...this.COMMEND_P0,...this.COMMEND_P0END,...this.COMMEND_P1,...this.COMMEND_P1END,...this.COMMEND_P2,...this.COMMEND_PNLIST,...this.COMMEND_SP];
+        this.COMMEND = [...this.COMMEND_P0,...this.COMMEND_P0END,...this.COMMEND_P1,...this.COMMEND_P1END,...this.COMMEND_P2,...this.COMMEND_P1LIST3,...this.COMMEND_SP];
 
         /**
          * 用户自定义过程
@@ -111,7 +124,7 @@ class PCLogo{
         for(let c of this.COMMEND_P0END) this.Lexical.set(c,this.c1end);
         for(let c of this.COMMEND_P1) this.Lexical.set(c,this.c1n1);
         for(let c of this.COMMEND_P1END) this.Lexical.set(c,this.c1p1end);
-        for(let c of this.COMMEND_PNLIST) this.Lexical.set(c,this.c1plist);
+        for(let c of this.COMMEND_P1LIST3) this.Lexical.set(c,this.c1p1list3);
         for(let c of this.COMMEND_SP) this.Lexical.set(c,this[c]);
     }
 
@@ -138,7 +151,6 @@ class PCLogo{
 
     //分析
     analysis(arr){
-        //console.debug("传入分析："+arr);
         if(arr == null) return [];
 
         let word = arr.shift();
@@ -190,16 +202,17 @@ class PCLogo{
         return _c;
     }
 
-    //数字参数列
-    c1plist(arr,word){
+    //一个数字或者3个数字的数组 如 cmd [12 34 56] 或 cmd 3
+    c1p1list3(arr,word){
         let _c=new Cmd(word);
         _c.param=[];
-        do{
-            let num = this.__getANum(arr[0]);
-            if(Object.is(NaN)) break;
-            _c.param.push(num);
-            arr.shift();
-        }while(arr.length>0)
+        if(arr[0]=="["&&arr[4]=="]"){
+            _c.param.push(this.__getANum(arr[1]),this.__getANum(arr[2]),this.__getANum(arr[3]));            
+            arr.shift();arr.shift();arr.shift();arr.shift();arr.shift();//arr = arr.splice(5);
+        }else{
+            _c.param.push(this.__getANum(arr.shift()));
+        }
+
         return _c;
     }
 
@@ -297,11 +310,18 @@ class WebLogo{
 
         //当前绘画环境
         this.bgColor = "black";
-        this.pos = null;
         this.sln = 1; //step longth
+        this.homePos = new Proxy(home,{set:function(target,b,value){
+            console.warn(target,b,value);
+            return true;
+        }});
         this.drawCmds = [];
-        this.homePos = home;
-        this.penDown = true;    //落笔状态
+
+        // this.pos = null;
+        // this.penDown = true;    //落笔状态
+        this.pens=[new PenStatu(home)]; //所有笔的状态
+        this.activePens=[0];        //激活的画笔（多笔同步作画）
+        this.curPen = 0;            //当前画笔
     }
     
     get angle(){return this.__ag__;}
@@ -310,6 +330,12 @@ class WebLogo{
         while(ag < 0) ag += 360;
         this.__ag__ = ag;
     }
+    ___satrPen(penid){
+        this.drawCmds[penid] = [new DrawCmd({path:[new Vector2D(this.pens[penid].pos)]})];
+        return true;
+    }
+
+
 
     /**
      * 将简单指令转换为绘画指令
@@ -317,12 +343,11 @@ class WebLogo{
      * @param {*当前角度} curAngle 
      * @param {*当前位置} pos 
      */
-    do(cmd,curAngle,pos){
+    do(cmd){
         let cmdObj = this.La.compile(cmd);
 
-        this.drawCmds = [new DrawCmd({path:[new Vector2D(pos)]})];
-        this.angle = curAngle;
-        this.pos = pos;
+        //this.drawCmds = [new DrawCmd({path:[new Vector2D(this.___getCurPen().pos)]})];
+        this.pens.every((v,i)=>this.___satrPen(i));
         this.exe(cmdObj);
 
         return this.drawCmds;//{path:this.temp_path,status:this.status};
@@ -336,27 +361,27 @@ class WebLogo{
 
     /* **************LOGO 绘画指令 ****************/
     ___drawHelp(){
-        if(this.penDown){
-            let dCmd = this.drawCmds[this.drawCmds.length - 1];
-            dCmd.path.push(new Vector2D(this.pos));
+        if(this.___getCurPen().penDown){
+            let dCmd = this.drawCmds[this.curPen][this.drawCmds.length - 1];
+            dCmd.path.push(new Vector2D(this.___getCurPen().pos));
         }
     }
 
     fd(cmd){
-        let ag = DEG2RAG(this.angle);
+        let ag = DEG2RAG(this.___getCurPen().angle);
         let l = cmd._param*this.sln;
-        this.pos.AddIn(new Vector2D(Math.cos(ag)*l,Math.sin(ag)*l));
+        this.___getCurPen().pos.AddIn(new Vector2D(Math.cos(ag)*l,Math.sin(ag)*l));
         this.___drawHelp();
     }
     bk(cmd){
-        let ag = DEG2RAG(this.angle);
+        let ag = DEG2RAG(this.___getCurPen().angle);
         let l = cmd._param*this.sln;
-        this.pos.MinusIn(new Vector2D(Math.cos(ag)*l,Math.sin(ag)*l));
+        this.___getCurPen().pos.MinusIn(new Vector2D(Math.cos(ag)*l,Math.sin(ag)*l));
         this.___drawHelp();
     }
 
-    lt(cmd){this.angle -= cmd._param;}
-    rt(cmd){this.angle += cmd._param;}
+    lt(cmd){this.___getCurPen().angle -= cmd._param;}
+    rt(cmd){this.___getCurPen().angle += cmd._param;}
 
     rp(cmd){/*repeat*/
         for(let i=0;i<cmd.param;i++){
@@ -365,19 +390,28 @@ class WebLogo{
     }
 
     /* **************画笔 操作指令 ****************/
-    pu(){this.penDown = false;}
+    ___getCurPen(){return this.pens[this.curPen];}
+    pu(){this.___getCurPen().penDown = false;}
     pd(){
-        this.penDown = true;
-        this.drawCmds.push(new DrawCmd({path:[new Vector2D(this.pos)]}))
+        this.___getCurPen().penDown = true;
+        this.drawCmds[this.curPen].push(new DrawCmd({path:[new Vector2D(this.___getCurPen().pos)]}));
     }
     setbg(cmd){
         if(cmd._param.length == 1&& cmd._param[0]>=0&&cmd._param[0]<this.color_list.length){
             this.bgColor= this.color_list[cmd._param[0]];
         }else if(cmd._param.length == 3&&Math.max(...cmd._param)<=100){
-            let r = Math.floor(255*cmd._param[0]/100);
-            let g = Math.floor(255*cmd._param[1]/100);
-            let b = Math.floor(255*cmd._param[2]/100);
-            this.bgColor = `rgba(${r},${g},${b},1)`;
+            this.bgColor = RGBA(cmd._param);
+        }else{
+            throw new Error("E00005");
+        }
+    }
+
+    setpc(cmd){
+        let pen = this.___getCurPen();
+        if(cmd._param.length == 1){
+            pen.penColor = this.color_list[cmd._param[0]]
+        }else if(cmd._param.length == 3){
+            pen.penColor = RGBA(cmd._param);
         }else{
             throw new Error("E00005");
         }
@@ -390,17 +424,18 @@ class WebLogo{
 
     /* **************LOGO 操作指令 ****************/
     home(cmd){
-        this.angle = 0;
-        this.pos.Copy(this.homePos);
-        this.drawCmds.push(new DrawCmd({path:[new Vector2D(this.pos)]}))
+        this.___getCurPen().angle = 0;
+        this.___getCurPen().pos.Copy(this.homePos);
+        this.drawCmds[this.curPen].push(new DrawCmd({path:[new Vector2D(this.___getCurPen().pos)]}))
     }
-
+    clean(cmd){this.drawCmds[this.curPen] = [new DrawCmd({type:"cs"})];}
     cs(cmd){
-        this.drawCmds = [new DrawCmd({type:"cs"})];
+        this.clean();
         this.home();
     }
 
-    async help(cmd){
+    /* **************命令窗相关 操作指令 ****************/
+    help(cmd){
         if(typeof this.__helpRsl == "undefined") this.__helpRsl = new Map();
         let r = this.__helpRsl.get(cmd.param);
         if(r == undefined){
@@ -415,20 +450,23 @@ class WebLogo{
              }
              this.__helpRsl.set(cmd.param,r);
         }
-        this.drawCmds = [r];
+        this.drawCmds[this.curPen] = [r];
+    }
+    ct(cmd){
+        this.drawCmds[this.curPen] = [new DrawCmd({type:"ClearText"})];
     }
 }
 
 class GameHelper{
     constructor(gameEngine){
-        this.version = [1,7,0]
+        this.version = [2,0,0,"α"];
         this.ge = gameEngine;
         let w = this.ge.run.width/2;
         let h = this.ge.run.height/2
         this.pclogo = new WebLogo(new Vector2D(w,h));      
         this.cmdLength = 0;
         this.cmdIndex = 0;
-        this.turtle = null;
+        this.turtleHouse = [];
 
         this.ge.one("jGE.Scene.Logo.End",this.start.bind(this));
 
@@ -438,7 +476,7 @@ class GameHelper{
                     ,["E00002","Comment '$1' can't be nesting,try help $1 for more information."]
                     ,["E00003","'$1' is already in use. Try a different name."]
                     ,["E00004","SyntaxError:missing '$1' after commends."]
-                    ,["E00005","Error:illegal of color setting,."]
+                    ,["E00005","Error:illegal of color setting,use help for more info."]
                 ]);
 
         this.l10n();
@@ -468,14 +506,14 @@ class GameHelper{
     }
 
     //创建海龟
-    createTurtle(){
-        let home = this.pclogo.homePos;
-        this.turtle = {
-            obj:new ShowObj(home),
-            pos:new Vector2D(home),
+    turtleBirth(){
+        let def_home = this.pclogo.home;
+        let turtle = {
+            obj:new ShowObj(def_home),
+            pos:new Vector2D(def_home),
             angle:0,            //角度 0 90 180 270
-            showStyle:0
-            
+            showStyle:0,
+            myShowItem : []
             ,goto(pos,angle){
                 this.pos.Copy(pos);
                 this.obj.Copy(pos);
@@ -483,14 +521,14 @@ class GameHelper{
                 this.obj.angle = DEG2RAG(angle)+π/2;
             }
         };
-        this.turtle.obj.index = 1000;
-        this.turtle.obj.add(new $tk_font({text:'🐙',styleType:'fill',style:'rgba(255,0,0,1)',font:'16px serif',pos:[0,0]}));
-        this.ge.add(this.turtle.obj);
-        this.curShowItem = [];
+        turtle.obj.index = 1000+this.turtleHouse.length;
+        turtle.obj.add(new $tk_font({text:'🐙',styleType:'fill',style:'rgba(255,0,0,1)',font:'16px serif',pos:[0,0]}));
+        this.ge.add(turtle.obj);
+        return turtle;
     }
 
     start(){
-        this.createTurtle();
+        this.updateTurtles();
 
         //环境初始化
         this.ShowResult(`Welcome to Web Logo [ver ${this.version.join(".")}]`);
@@ -504,42 +542,60 @@ class GameHelper{
     }
 
     do(cmd){
-        let dCmd = this.pclogo.do(cmd,this.turtle.angle,this.turtle.pos);
+        let cmdQueue = this.pclogo.do(cmd);
 
-        this.turtle.goto(this.pclogo.pos,this.pclogo.angle);
+        //TODO:需要优化
+        this.updateTurtles();
 
-        let newpath = new ShowObj(0,0);
-        for(let dC of dCmd){
-            switch(dC.type){
-                case "path":
-                    if(dC.path.length == 1){
-                        console.debug("监控到只有一个点的路径");
-                        continue;
-                    }
-                    newpath.add(new $tk_path({styleType:'stroke',style:"#ffffff 1 round round" ,points:dC.path}));
-                    break;
-                case "cs":
-                    for(let s of this.curShowItem) s.isDel = true;
-                    newpath = new ShowObj(0,0);
-                    this.curShowItem = [];
-                    break;
-                case "help":
-                    this.ShowResult(dC.help_text,{help:true});
-                    this.dCmd = [];
-                    return;
-                    break;
+        cmdQueue.every((dCmd,i)=>{
+            let newpath = new ShowObj(0,0);            
+            for(let dC of dCmd){
+                switch(dC.type){
+                    case "path":
+                        if(dC.path.length == 1){
+                            console.debug("监控到只有一个点的路径");
+                            continue;
+                        }
+                        newpath.add(new $tk_path({styleType:'stroke',style:"#ffffff 1 round round" ,points:dC.path}));
+                        break;
+                    case "cs":
+                        for(let s of this.turtleHouse[i].myShowItem) s.isDel = true;
+                        newpath = new ShowObj(0,0);
+                        this.turtleHouse[i].myShowItem = [];
+                        break;
+                    case "help":
+                        this.ShowResult(dC.help_text,{help:true});
+                        this.dCmd = [];
+                        return;
+                        break;
+                    case "ClearText":
+                        this.ShowResult("",{cls:true});
+                        break;
+                }
+
             }
-
-        }
-        this.curShowItem.push(newpath);
-        this.ge.add(newpath);
+            this.turtleHouse[i].myShowItem.push(newpath);
+            this.ge.add(newpath);
+            return true;
+        });
         this.ge.backgroundColor = this.pclogo.bgColor;
     }
 
-    ShowResult(text,{error=false,help=false}={}){
+    updateTurtles(){
+        this.pclogo.pens.map((t,i)=>{
+            if(!this.turtleHouse[i]){
+                this.turtleHouse[i] = this.turtleBirth();
+            }
+
+            this.turtleHouse[i].goto(t.pos,t.angle);
+        });
+    }
+
+    ShowResult(text,{error=false,help=false,cls=false}={}){
         let cmd_win = document.getElementById("cmd_log");
         let p = document.createElement("p");
         p.textContent = text;
+        if(cls){cmd_win.textContent="";return;}
         if(error){
             p.style.color="#a94442";
             let [errcode,...errparam] = text.split("|");
@@ -609,4 +665,13 @@ class GameHelper{
 
 function DEG2RAG(ag){
     return π*ag/180-π/2;//-0.5π是为了将y轴正方形朝下
+}
+
+function RGBA(arr){
+    let r = Math.floor(255*arr[0]/100);
+    let g = Math.floor(255*arr[1]/100);
+    let b = Math.floor(255*arr[2]/100);
+    let a = arr[3];
+    if(a == undefined) a = 1;
+    return `rgba(${r},${g},${b},${a})`;
 }

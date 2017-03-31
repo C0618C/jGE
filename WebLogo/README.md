@@ -53,14 +53,20 @@ setw | 无 | 笔粗 | setw 1 | 将笔粗设为1像素
 	12  salmon	13  purple	14  orange	15  grey
 
 ## TODO List
-* 支持指令 setw、setbg、setpc、ht、st、ct、clean、draw
+* 支持指令 setw、~~setbg~~、setpc、ht、st、~~ct、clean~~、draw
 * 支持指令 wait、random
 * 支持多行录入、行尾;注释
 * ~~根据浏览器语言自动本地化~~
-* help指令
+* ~~help指令~~
 * 换成海龟
 
 ## 版本记录
+* v2.0.0 α　　2017-03-31  
+    调整解释器，为‘多线程’画图作准备
+* v1.7.0　　2017-03-31  
+    新增clean、ct
+* v1.6.0　　2017-03-30  
+    新增setbg
 * v1.5.0　　2017-03-28  
     重构国际化部分，支持根据浏览器语言选择显示语言。
 * v1.4.0　　2017-03-28  
