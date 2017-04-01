@@ -311,10 +311,7 @@ class WebLogo{
         //当前绘画环境
         this.bgColor = "black";
         this.sln = 1; //step longth
-        this.homePos = new Proxy(home,{set:function(target,b,value){
-            console.warn(target,b,value);
-            return true;
-        }});
+        this.homePos = new Vector2D(home);
         this.drawCmds = [];
 
         // this.pos = null;
@@ -362,7 +359,7 @@ class WebLogo{
     /* **************LOGO 绘画指令 ****************/
     ___drawHelp(){
         if(this.___getCurPen().penDown){
-            let dCmd = this.drawCmds[this.curPen][this.drawCmds.length - 1];
+            let dCmd = this.drawCmds[this.curPen][this.drawCmds[this.curPen].length - 1];
             dCmd.path.push(new Vector2D(this.___getCurPen().pos));
         }
     }

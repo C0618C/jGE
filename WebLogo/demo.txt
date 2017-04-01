@@ -29,6 +29,32 @@ repeat 8[fd 80 rt 45 fd 20 repeat 4[fd 50 rt 90]]
 repeat 36[fd 3.14*10/18 rt 360/36]
 
 
+//////重构后检测专用
+//椅子 基本绘画指令检测
+fd 100 rt 90 fd 100 lt 90 fd 100 bk 200
+
+//虚线 检测：fd pu pd rp
+fd 50 pu fd 50 pd fd 50 pu fd 50 pd fd 50 pu fd 50 pd
+rp 100[fd 50 pu fd 50 pd]
+
+//clean检测
+fd 100 clean fd 100 bk 200
+
+//home 测试
+rt 38 fd 100 home lt 38 fd 100
+
+
+
+
+
+失败记录 clean home
+
+
+
+
+
+
+
 --目前不能
 
 to lwjx :b ht rt 18 repeat 5[fd :b rt 144 fd :b rt 54 fd:b*1.9 bk :b*1.9 lt 126] end
