@@ -43,7 +43,8 @@ fd 100 clean fd 100 bk 200
 //home 测试
 rt 38 fd 100 home lt 38 fd 100
 
-
+//setpc 测试
+fd 50 setpc 1 fd 50 setpc 2 fd 50 setpc 3 fd 50
 
 
 

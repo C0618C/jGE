@@ -22,9 +22,15 @@ class Cmd{
  * 绘画指令
  */
 class DrawCmd{
-    constructor({type="path",path=[]}={}){
-        this.type = type;
-        this.path = path;
+    constructor({type="path",pen=null}={}){
+        if(pen!=null){
+            this.type = "path";
+            this.path=[new Vector2D(pen.pos)];
+            this.lineColor = pen.penColor;
+            this.lineWidth = pen.penWidth;
+        }else{
+            this.type = type;
+        }
     }
 }
 /**
@@ -45,6 +51,7 @@ class PenStatu{
 //词法工具
 class PCLogo{
     constructor(){
+        //NOTE:注册各指令模式
         /**
          * 注册无参 并终结指令
          */
@@ -52,11 +59,11 @@ class PCLogo{
         /**
          * 注册无参指令
          */
-        this.COMMEND_P0 = new Set(["pu","pd","ht","st","home","cs","draw","clean","ct"]);
+        this.COMMEND_P0 = new Set(["pu","pd","ht","st","home","cs","draw","clean","ct","width"]);
         /**
          * 注册1参指令
          */
-        this.COMMEND_P1 = new Set(["fd","lt","rt","bk","setw","setpc","test","random","wait"]);
+        this.COMMEND_P1 = new Set(["fd","lt","rt","bk","setw","test","random","wait"]);
         /**
          * 注册1参 并终结指令
          */
@@ -328,7 +335,7 @@ class WebLogo{
         this.__ag__ = ag;
     }
     ___satrPen(penid){
-        this.drawCmds[penid] = [new DrawCmd({path:[new Vector2D(this.pens[penid].pos)]})];
+        this.drawCmds[penid] = [new DrawCmd({pen:this.pens[penid]})];
         return true;
     }
 
@@ -343,7 +350,6 @@ class WebLogo{
     do(cmd){
         let cmdObj = this.La.compile(cmd);
 
-        //this.drawCmds = [new DrawCmd({path:[new Vector2D(this.___getCurPen().pos)]})];
         this.pens.every((v,i)=>this.___satrPen(i));
         this.exe(cmdObj);
 
@@ -358,9 +364,16 @@ class WebLogo{
 
     /* **************LOGO 绘画指令 ****************/
     ___drawHelp(){
-        if(this.___getCurPen().penDown){
+        let pen = this.___getCurPen();
+        if(pen.penDown){
             let dCmd = this.drawCmds[this.curPen][this.drawCmds[this.curPen].length - 1];
-            dCmd.path.push(new Vector2D(this.___getCurPen().pos));
+            if(dCmd.lineColor != pen.penColor || dCmd.lineWidth != pen.penWidth){
+                let __dcmd = new DrawCmd({pen : pen});
+                __dcmd.path[0].Copy(dCmd.path[dCmd.path.length - 1]);
+                this.drawCmds[this.curPen].push(__dcmd);
+                dCmd = __dcmd;
+            }
+            dCmd.path.push(new Vector2D(pen.pos));
         }
     }
 
@@ -391,7 +404,7 @@ class WebLogo{
     pu(){this.___getCurPen().penDown = false;}
     pd(){
         this.___getCurPen().penDown = true;
-        this.drawCmds[this.curPen].push(new DrawCmd({path:[new Vector2D(this.___getCurPen().pos)]}));
+        this.drawCmds[this.curPen].push(new DrawCmd({pen:this.___getCurPen()}));
     }
     setbg(cmd){
         if(cmd._param.length == 1&& cmd._param[0]>=0&&cmd._param[0]<this.color_list.length){
@@ -414,18 +427,26 @@ class WebLogo{
         }
     }
 
-    /* ****************** 编程指令 ****************/
-    to(cmd){
-        console.log(cmd);
+    setw(cmd){this.___getCurPen().penWidth = cmd._param;}
+    width(){
+        let r = new DrawCmd({type:"help"});
+        r.help_text="Result:"+this.___getCurPen().penWidth;
+        this.drawCmds[this.curPen]=[r];
     }
+
+    /* ****************** 编程指令 ****************/
+    to(cmd){}
 
     /* **************LOGO 操作指令 ****************/
     home(cmd){
         this.___getCurPen().angle = 0;
         this.___getCurPen().pos.Copy(this.homePos);
-        this.drawCmds[this.curPen].push(new DrawCmd({path:[new Vector2D(this.___getCurPen().pos)]}))
+        this.drawCmds[this.curPen].push(new DrawCmd({pen:this.___getCurPen()}));       
     }
-    clean(cmd){this.drawCmds[this.curPen] = [new DrawCmd({type:"cs"})];}
+    clean(cmd){
+        this.drawCmds[this.curPen] = [new DrawCmd({type:"cs"})];
+        this.drawCmds[this.curPen].push(new DrawCmd({pen:this.___getCurPen()}));
+    }
     cs(cmd){
         this.clean();
         this.home();
@@ -443,7 +464,11 @@ class WebLogo{
              }else{
                 /* await GetURL({url:`../WebLogo/helpfiles/${cmd.param}.txt`,type:"text",method:"GET",async:false})
                  .then((t)=>{console.log(2);r.help_text=`<pre>${t}</pre>`}).catch((t)=>{throw new Error(t)});*/
-                LoadResources({url:`../WebLogo/helpfiles/${cmd.param}.txt`,success:(t)=>{r.help_text=`<pre>${t}</pre>`},error:(t)=>{throw new Error(t)},async:false})
+                LoadResources({
+                    url:`../WebLogo/helpfiles/${cmd.param}.txt`
+                    ,success:(t)=>{r.help_text=`<pre>${t}</pre>`}
+                    ,error:(t)=>{r.help_text="Can't find the manual.";},async:false
+                });
              }
              this.__helpRsl.set(cmd.param,r);
         }
@@ -541,11 +566,10 @@ class GameHelper{
     do(cmd){
         let cmdQueue = this.pclogo.do(cmd);
 
-        //TODO:需要优化
         this.updateTurtles();
 
         cmdQueue.every((dCmd,i)=>{
-            let newpath = new ShowObj(0,0);            
+            let newpath = new ShowObj(0,0);
             for(let dC of dCmd){
                 switch(dC.type){
                     case "path":
@@ -553,7 +577,8 @@ class GameHelper{
                             console.debug("监控到只有一个点的路径");
                             continue;
                         }
-                        newpath.add(new $tk_path({styleType:'stroke',style:"#ffffff 1 round round" ,points:dC.path}));
+                        console.log(dC);
+                        newpath.add(new $tk_path({styleType:'stroke',style:`${dC.lineColor} ${dC.lineWidth}` ,points:dC.path}));// round round
                         break;
                     case "cs":
                         for(let s of this.turtleHouse[i].myShowItem) s.isDel = true;
@@ -563,7 +588,7 @@ class GameHelper{
                     case "help":
                         this.ShowResult(dC.help_text,{help:true});
                         this.dCmd = [];
-                        return;
+                        return true;
                         break;
                     case "ClearText":
                         this.ShowResult("",{cls:true});
