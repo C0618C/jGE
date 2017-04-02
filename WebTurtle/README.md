@@ -1,9 +1,9 @@
-# Web Logo
-> Web Logo 是基于:dragon:jGE的一个小程序，关于:dragon:jGE的内容，请到:dragon:jGE页面查看。  
+# Web Turtle
+> Web Turtle 是基于:dragon:jGE的一个小程序，关于:dragon:jGE的内容，请到:dragon:jGE页面查看。  
     
 #你还记得当年的小海龟么# 或许对很多人来说，成为程序员只是偶然；但我，在多年前认识小海龟的那个下午，就已经注定了。感谢Logo语言，让我在程序员的路上越走越远。
 
-部署地址：<http://www.vmwed.com/sb/weblogo/>  
+部署地址：<http://www.vmwed.com/sb/webturtle/>  
 
 ## 操作指引
 1. 在页面底部有指令输入栏，用于输入指令。
@@ -50,7 +50,7 @@ random | 数字 | 随机 | random 30 | 产生一个0到30之间的随机数
 蒲公英 | repeat 24[fd 40 lt 45 fd 15 bk 15 rt 90 fd 15 bk 15  lt 45 bk 40 rt 360/24] bk 200
 蒲公英 | 重复 24[前进 40 左转 45 前进 15 后退 15 右转 90 前进 15 后退 15  左转 45 后退 40 右转 360/24] 后退 200
 五角星(定义过程) | to lwjx :b rt 18 repeat 5[fd :b rt 144 fd :b rt 54 fd :b*1.9 bk :b*1.9 lt 126] end lwjx 150
-气球 | lt 10 repeat 2[fd 70 rt 90 repeat 360[fd 0.5 lt 1]home rt 10] 
+花纹 | rp 45 [ fd 250 rt 178 fd 250 lt 182 ]
 花纹 | repeat 15 [ lt 360/15 fd 80 repeat 20 [ fd 20 lt 45 fd 10 bk 10 rt 90 fd 10 bk 10 lt 45 bk 20 rt 360/20 ] bk 80 ]
 直线圆 | rp 45 [ fd 300 rt 128 ]
 花朵 | rp 6[lt 45 rp 4[rp 9[fd 5 rt 10] rp 9[fd 5 lt 10] rt 90]rt 105]
@@ -79,15 +79,17 @@ setbg [100 50 50] setpc [10 100 10]
 * 支持多行录入、行尾`;`注释
 * ~~根据浏览器语言自动本地化~~
 * ~~help指令~~
-* 换成海龟
+* ~~换成海龟~~
 * 多线程做图(ask指令的支持)
 * 支持新增数组形式类型参数的支持
 
 
 ## 版本记录
-* v2.0.0 α　　2017-03-31  
+* v2.0.0　　2017-04-2  
+    正式更名为Web Turtle
     调整解释器，为‘多线程’画图作准备  
-    新增setpc setw
+    新增setpc、setw、$turtle、random  
+    支持更换海龟图形，默认使用经典海龟
 * v1.7.0　　2017-03-31  
     新增clean、ct
 * v1.6.0　　2017-03-30  
@@ -106,4 +108,4 @@ setbg [100 50 50] setpc [10 100 10]
     支持5个基础的画图指令。
 
 # License
-You may use the jGE (or Steering Behaviors or Web Logo) under the MIT license. See LICENSE.
+You may use the jGE (or Steering Behaviors or Web Turtle) under the MIT license. See LICENSE.

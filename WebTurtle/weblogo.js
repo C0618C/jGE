@@ -44,6 +44,7 @@ class PenStatu{
         this.pos= pos;
         this.angle=0;
         this.isShow = true;
+        this.style = 0;
     }
 }
 
@@ -63,7 +64,7 @@ class PCLogo{
         /**
          * 注册1参指令
          */
-        this.COMMEND_P1 = new Set(["fd","lt","rt","bk","setw","test","random","wait"]);
+        this.COMMEND_P1 = new Set(["fd","lt","rt","bk","setw","test","random","wait","$turtle"]);
         /**
          * 注册1参 并终结指令
          */
@@ -99,10 +100,22 @@ class PCLogo{
         /* 转义、国际化翻译用字典 *//*NOTE: 全称命令化简配置*/
         this._cmd_map = new Map([["repeat","rp"],["\\?","help"],["right","rt"],["left","lt"],["forward","fd"],["back","bk"]]);
 
-        this.__getANum = (s)=>{
+        this.__getANum = (s,arr)=>{
             let rsl = NaN;
             if(this.isInCustomProcess&&s.includes(":")) rsl = s;
-            else try{rsl = eval(s)}catch(e){}
+            else if(s == "random"){
+                let tA = arr.shift();
+                let a = this.__getANum(tA,arr);
+                let tB = arr.shift();
+                let b = this.__getANum(tB,arr);
+                console.info(a,b);
+                if(Object.is(NaN,b)||b==undefined){
+                    if(tB!=undefined)arr.unshift(tB);
+                    rsl = RANDOM(0,a-1);
+                }else{
+                    rsl = RANDOM(a,b);
+                }
+            }else try{rsl = eval(s)}catch(e){}
             return rsl;
         };
 
@@ -148,7 +161,7 @@ class PCLogo{
         let rsl = this.cmd_history.get(cmd);
         if(!rsl){
             rsl = this.analysis(cmd.match(/[^\s\r\n]+/ig));
-            this.cmd_history.set(cmd,rsl);
+            this.cmd_history.set(cmd,cmd.includes("random")?false:rsl);
 
             //本地存档
             localStorage.setItem("weblogo_cmd_history",JSON.stringify([...this.cmd_history.keys()]));
@@ -190,9 +203,9 @@ class PCLogo{
      */
     c1n1(arr,word){
         let _c = new Cmd(word);
-        _c.param = this.__getANum(arr.shift());
+        _c.param = this.__getANum(arr.shift(),arr);
         if(Object.is(_c.param,NaN)){
-            throw new Error(`Illegal number after ${word}.`)
+            throw new Error(`E00006|${word}.`);
         }
         return _c;
     }
@@ -214,11 +227,17 @@ class PCLogo{
         let _c=new Cmd(word);
         _c.param=[];
         if(arr[0]=="["&&arr[4]=="]"){
-            _c.param.push(this.__getANum(arr[1]),this.__getANum(arr[2]),this.__getANum(arr[3]));            
-            arr.shift();arr.shift();arr.shift();arr.shift();arr.shift();//arr = arr.splice(5);
+            let a,b,c = 0;
+            a = this.__getANum(arr.shift(),arr);
+            b = this.__getANum(arr.shift(),arr);
+            c = this.__getANum(arr.shift(),arr);
+            _c.param.push(a,b,c);
+            arr.shift();
         }else{
-            _c.param.push(this.__getANum(arr.shift()));
+            _c.param.push(this.__getANum(arr.shift(),arr));
         }
+
+        if(!_c.param.every(i=>Number.isFinite(i))) throw new Error(`E00006|${word}`);
 
         return _c;
     }
@@ -340,7 +359,6 @@ class WebLogo{
     }
 
 
-
     /**
      * 将简单指令转换为绘画指令
      * @param {*基本指令序列} cmd 
@@ -353,7 +371,16 @@ class WebLogo{
         this.pens.every((v,i)=>this.___satrPen(i));
         this.exe(cmdObj);
 
-        return this.drawCmds;//{path:this.temp_path,status:this.status};
+        let rsl = [];
+        //清理只有起点的路径
+        this.drawCmds.forEach((pc,idx)=>pc.forEach(c=>{
+            if(c.type == "path" && c.path.length <=1);else{
+                if(rsl[idx]==undefined) rsl[idx]=[];
+                rsl[idx].push(c);
+            }
+        }));
+
+        return rsl;//{path:this.temp_path,status:this.status};
     }
 
     exe(cmd){
@@ -425,6 +452,8 @@ class WebLogo{
         }else{
             throw new Error("E00005");
         }
+
+        console.log("设置笔色:"+pen.penColor);
     }
 
     setw(cmd){this.___getCurPen().penWidth = cmd._param;}
@@ -436,6 +465,7 @@ class WebLogo{
 
     /* ****************** 编程指令 ****************/
     to(cmd){}
+    random(cmd){}
 
     /* **************LOGO 操作指令 ****************/
     home(cmd){
@@ -458,7 +488,7 @@ class WebLogo{
         let r = this.__helpRsl.get(cmd.param);
         if(r == undefined){
              r = new DrawCmd({type:"help"});
-             r.help_text="Loading...";
+             r.help_text="Can't find the manual.";
              if(!cmd.param){
                  r.help_text="<span class='help_cmd'>"+this.La.COMMEND.sort().join("</span><span class='help_cmd'>").toUpperCase()+"</span>";
              }else{
@@ -477,11 +507,17 @@ class WebLogo{
     ct(cmd){
         this.drawCmds[this.curPen] = [new DrawCmd({type:"ClearText"})];
     }
+
+    /* **************扩展指令 与logo不兼容的指令 ****************/
+    //更换海龟的样子
+    $turtle(cmd){
+        this.___getCurPen().style = cmd._param;
+    }
 }
 
 class GameHelper{
     constructor(gameEngine){
-        this.version = [2,0,0,"α"];
+        this.version = [2,0,0];
         this.ge = gameEngine;
         let w = this.ge.run.width/2;
         let h = this.ge.run.height/2
@@ -499,6 +535,7 @@ class GameHelper{
                     ,["E00003","'$1' is already in use. Try a different name."]
                     ,["E00004","SyntaxError:missing '$1' after commends."]
                     ,["E00005","Error:illegal of color setting,use help for more info."]
+                    ,["E00006","Illegal number after '$1'."]
                 ]);
 
         this.l10n();
@@ -528,13 +565,14 @@ class GameHelper{
     }
 
     //创建海龟
-    turtleBirth(){
-        let def_home = this.pclogo.home;
+    turtleBirth(curPos,style=0){
+        if(curPos == undefined) curPos = this.pclogo.home;
         let turtle = {
-            obj:new ShowObj(def_home),
-            pos:new Vector2D(def_home),
+            obj:this.turtleMaker(curPos,style),
+            pos:new Vector2D(curPos),
             angle:0,            //角度 0 90 180 270
-            showStyle:0,
+            showStyle:style,
+            showColor:"white",
             myShowItem : []
             ,goto(pos,angle){
                 this.pos.Copy(pos);
@@ -543,10 +581,37 @@ class GameHelper{
                 this.obj.angle = DEG2RAG(angle)+π/2;
             }
         };
-        turtle.obj.index = 1000+this.turtleHouse.length;
-        turtle.obj.add(new $tk_font({text:'🐙',styleType:'fill',style:'rgba(255,0,0,1)',font:'16px serif',pos:[0,0]}));
         this.ge.add(turtle.obj);
         return turtle;
+    }
+
+    turtleMaker(basePose,style){
+        let turtleObj = new ShowObj(basePose);
+        turtleObj.index = 1000+this.turtleHouse.length;
+        let turtleStyle=[,'🐙','🐞','🐾','😼','📍','🎃','👽','👻','🐼'];
+        let curStyle = turtleStyle[style];
+        switch(style){
+            case 0:
+                let b_l = 1.25;
+                turtleObj.add(new $tk_path({styleType:'stroke',style:`white 1` ,points:[
+                    [-4*b_l,2*b_l],[-2*b_l,4*b_l],[2*b_l,4*b_l],[4*b_l,2*b_l],[4*b_l,-2*b_l],[2*b_l,-4*b_l],[-2*b_l,-4*b_l],[-4*b_l,-2*b_l],-1
+                ]}));
+                turtleObj.add(new $tk_path({styleType:'stroke',style:`white 1` ,points:[[-1*b_l,5*b_l],[1*b_l,5*b_l]]}));
+                turtleObj.add(new $tk_path({styleType:'stroke',style:`white 1` ,points:[[0*b_l,5*b_l],[2*b_l,7*b_l]]}));        
+                turtleObj.add(new $tk_path({styleType:'both',style:{fillStyle:"white",strokeStylest:"white 1"} ,points:[[-3*b_l,-4*b_l],[-3*b_l,-8*b_l],[-1*b_l,-10*b_l],[-1*b_l,-6*b_l],-1]}));
+                turtleObj.add(new $tk_path({styleType:'both',style:{fillStyle:"white",strokeStylest:"white 1"} ,points:[[3*b_l,-4*b_l],[3*b_l,-8*b_l],[1*b_l,-10*b_l],[1*b_l,-6*b_l],-1]}));
+                turtleObj.add(new $tk_path({styleType:'stroke',style:`white 1` ,points:[[-1*b_l,-10*b_l],[1*b_l,-10*b_l]]}));
+                turtleObj.add(new $tk_path({styleType:'stroke',style:`white 1` ,points:[[-4*b_l,2*b_l],[-6*b_l,4*b_l],[-4*b_l,5*b_l],[-3*b_l,3*b_l]]}));
+                turtleObj.add(new $tk_path({styleType:'stroke',style:`white 1` ,points:[[4*b_l,2*b_l],[6*b_l,4*b_l],[4*b_l,5*b_l],[3*b_l,3*b_l]]}));
+                turtleObj.add(new $tk_path({styleType:'stroke',style:`white 1` ,points:[[4*b_l,-2*b_l],[6*b_l,-4*b_l],[4*b_l,-5*b_l],[3*b_l,-3*b_l]]}));
+                turtleObj.add(new $tk_path({styleType:'stroke',style:`white 1` ,points:[[-4*b_l,-2*b_l],[-6*b_l,-4*b_l],[-4*b_l,-5*b_l],[-3*b_l,-3*b_l]]}));
+                break;
+            default :
+                turtleObj.add(new $tk_font({text:curStyle,styleType:'fill',style:'rgba(255,0,0,1)',font:'16px serif',pos:[0,0]}));
+                break;
+        }
+
+        return turtleObj;
     }
 
     start(){
@@ -604,12 +669,27 @@ class GameHelper{
     }
 
     updateTurtles(){
-        this.pclogo.pens.map((t,i)=>{
-            if(!this.turtleHouse[i]){
-                this.turtleHouse[i] = this.turtleBirth();
+        this.pclogo.pens.map((p,i)=>{
+            let t = this.turtleHouse[i] || (this.turtleHouse[i] = this.turtleBirth());
+
+            if(t.showStyle != p.style){
+                this.ge.del(t.obj);
+                t.showStyle = t.style;
+                t.obj = this.turtleMaker(p.pos,p.style);
+                this.ge.add(t.obj);
             }
 
-            this.turtleHouse[i].goto(t.pos,t.angle);
+            if(t.showStyle == 0 && p.penColor != t.showColor){
+                for(let l of t.obj){
+                    if(l.styleType == "stroke"){
+                        l.setStyle(`${p.penColor} 1`);
+                    }else if(l.styleType =="both"){
+                        l.setStyle({fillStyle:p.penColor,strokeStylest:`${p.penColor} 1`});
+                    }
+                }
+            }
+
+            t.goto(p.pos,p.angle);
         });
     }
 
@@ -696,4 +776,9 @@ function RGBA(arr){
     let a = arr[3];
     if(a == undefined) a = 1;
     return `rgba(${r},${g},${b},${a})`;
+}
+
+function RANDOM(a,b){
+    let rd = (n)=>Math.floor(Math.random()*1000%n);
+    return rd(b-a+1)+a;
 }

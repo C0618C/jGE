@@ -22,11 +22,11 @@
 3. 研究其它聚集效应的案例和算法，整合或优化现有的东西。  
   
   
-## 关于 Web Logo
+## 关于 Web Turtle
 这是我在做jGE的过程中突然勾起童年记忆中的小海龟，然后立下这个案例。也是一个基于jGE的具体应用案例。  
 计划是模仿少部分我熟悉的 PC Logo 的操作指令。作为一个回忆的趣味项目。  
 
-目前处于构思阶段，理论上目前版本的jGE能完成这案例。但我想等jGE稍微更成熟点之后再做。
+目前已基本完成。
 
 # License
-You may use the jGE (or Steering Behaviors or Web Logo) under the MIT license. See LICENSE.
+You may use the jGE (or Steering Behaviors or Web Turtle) under the MIT license. See LICENSE.
