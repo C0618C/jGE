@@ -50,12 +50,13 @@ random | 数字 | 随机 | random 30 | 产生一个0到30之间的随机数
 蒲公英 | repeat 24[fd 40 lt 45 fd 15 bk 15 rt 90 fd 15 bk 15  lt 45 bk 40 rt 360/24] bk 200
 蒲公英 | 重复 24[前进 40 左转 45 前进 15 后退 15 右转 90 前进 15 后退 15  左转 45 后退 40 右转 360/24] 后退 200
 五角星(定义过程) | to lwjx :b rt 18 repeat 5[fd :b rt 144 fd :b rt 54 fd :b*1.9 bk :b*1.9 lt 126] end lwjx 150
-花纹 | rp 45 [ fd 250 rt 178 fd 250 lt 182 ]
+花纹 | rp 45 [ setpc random 16 fd 250 rt 178 fd 250 lt 182 ]
 花纹 | repeat 15 [ lt 360/15 fd 80 repeat 20 [ fd 20 lt 45 fd 10 bk 10 rt 90 fd 10 bk 10 lt 45 bk 20 rt 360/20 ] bk 80 ]
-直线圆 | rp 45 [ fd 300 rt 128 ]
+直线圆 | rp 45 [ setpc random 16 fd 300 rt 128 ] 
 花朵 | rp 6[lt 45 rp 4[rp 9[fd 5 rt 10] rp 9[fd 5 lt 10] rt 90]rt 105]
 矩形纹 | rp 8[fd 30 lt 45 rp 4 [fd 25 rt 90] rt 45 fd 10 lt 45 rp 4 [fd 50 rt 90] rt 45 bk 40 rt 360/8]
 彩笔示范 | setw20 fd 50 setpc 4 fd 50 setpc 6 fd 50 setpc [20 20 100] fd 50
+涂鸦（会卡）| rp 100[rp 100 [ setpc random 16 fd random 200 rt random 360 ] home ]
 
 
 ## 颜色代码和颜色数组

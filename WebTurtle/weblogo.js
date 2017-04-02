@@ -48,6 +48,47 @@ class PenStatu{
     }
 }
 
+class Num{
+    constructor(n){
+        this._v=NaN;
+        this._s=0;
+        this._e=0;
+        this.type="number";
+        this.val = n;
+    }
+    get val(){
+        switch(this.type){
+            case "number": return this._v;
+            case "random": return RANDOM(this._s,this._e);
+        }
+    }
+    set val(arr){
+        if(Array.isArray(arr) && arr[0]=="random"){
+            this._v = 0;
+            this.type = arr.shift();
+            let a=arr[0];
+            let b = arr[1];
+            try{
+                if(!Number.isFinite(a)) a = eval(a);
+            }catch(e){a = NaN;}
+            try{
+                if(!Number.isFinite(b)) b = eval(b);
+            }catch(e){b = NaN;}
+            
+            arr.shift();
+            if(Object.is(NaN,b)||Object.is(undefined,b)){
+                this._s=0;this._e=a;
+            }else{
+                this._s=a;this._e=b;arr.shift();
+            }
+        }else if(Number.isFinite(arr)){
+            this._v = arr;this.type = "number";
+        }else{
+             try{this._v = eval(arr[0]);arr.shift();}catch(e){this._v=NaN;}
+             this.type = "number";
+        } 
+    }
+}
 
 //词法工具
 class PCLogo{
@@ -60,11 +101,11 @@ class PCLogo{
         /**
          * 注册无参指令
          */
-        this.COMMEND_P0 = new Set(["pu","pd","ht","st","home","cs","draw","clean","ct","width"]);
+        this.COMMEND_P0 = new Set(["pu","pd","ht","st","home","cs","draw","clean","ct","width","random"]);
         /**
          * 注册1参指令
          */
-        this.COMMEND_P1 = new Set(["fd","lt","rt","bk","setw","test","random","wait","$turtle"]);
+        this.COMMEND_P1 = new Set(["fd","lt","rt","bk","setw","test","wait","$turtle"]);
         /**
          * 注册1参 并终结指令
          */
@@ -101,6 +142,7 @@ class PCLogo{
         this._cmd_map = new Map([["repeat","rp"],["\\?","help"],["right","rt"],["left","lt"],["forward","fd"],["back","bk"]]);
 
         this.__getANum = (s,arr)=>{
+            console.warn("已废弃，需尽早改用数字对象 Num")
             let rsl = NaN;
             if(this.isInCustomProcess&&s.includes(":")) rsl = s;
             else if(s == "random"){
@@ -203,9 +245,9 @@ class PCLogo{
      */
     c1n1(arr,word){
         let _c = new Cmd(word);
-        _c.param = this.__getANum(arr.shift(),arr);
-        if(Object.is(_c.param,NaN)){
-            throw new Error(`E00006|${word}.`);
+        _c.param = new Num(arr);
+        if(Object.is(_c.param.val,NaN)){
+            throw new Error(`E00006|${word}`);
         }
         return _c;
     }
@@ -234,10 +276,10 @@ class PCLogo{
             _c.param.push(a,b,c);
             arr.shift();
         }else{
-            _c.param.push(this.__getANum(arr.shift(),arr));
+            _c.param.push(new Num(arr));
         }
 
-        if(!_c.param.every(i=>Number.isFinite(i))) throw new Error(`E00006|${word}`);
+        if(!_c.param.every(i=>!Object.is(i,NaN))) throw new Error(`E00006|${word}`);
 
         return _c;
     }
@@ -406,22 +448,22 @@ class WebLogo{
 
     fd(cmd){
         let ag = DEG2RAG(this.___getCurPen().angle);
-        let l = cmd._param*this.sln;
+        let l = cmd._param.val*this.sln;
         this.___getCurPen().pos.AddIn(new Vector2D(Math.cos(ag)*l,Math.sin(ag)*l));
         this.___drawHelp();
     }
     bk(cmd){
         let ag = DEG2RAG(this.___getCurPen().angle);
-        let l = cmd._param*this.sln;
+        let l = cmd._param.val*this.sln;
         this.___getCurPen().pos.MinusIn(new Vector2D(Math.cos(ag)*l,Math.sin(ag)*l));
         this.___drawHelp();
     }
 
-    lt(cmd){this.___getCurPen().angle -= cmd._param;}
-    rt(cmd){this.___getCurPen().angle += cmd._param;}
+    lt(cmd){this.___getCurPen().angle -= cmd._param.val;}
+    rt(cmd){this.___getCurPen().angle += cmd._param.val;}
 
     rp(cmd){/*repeat*/
-        for(let i=0;i<cmd.param;i++){
+        for(let i=0;i<cmd.param.val;i++){
             this.exe(cmd.sub_cmd);
         }
     }
@@ -434,10 +476,12 @@ class WebLogo{
         this.drawCmds[this.curPen].push(new DrawCmd({pen:this.___getCurPen()}));
     }
     setbg(cmd){
-        if(cmd._param.length == 1&& cmd._param[0]>=0&&cmd._param[0]<this.color_list.length){
-            this.bgColor= this.color_list[cmd._param[0]];
-        }else if(cmd._param.length == 3&&Math.max(...cmd._param)<=100){
-            this.bgColor = RGBA(cmd._param);
+        let [a,b={val:0},c={val:0}] = cmd._param;
+        a = a.val;        b = b.val;        c = c.val;
+        if(cmd._param.length == 1&& a>=0&&a<this.color_list.length){
+            this.bgColor= this.color_list[a];
+        }else if(cmd._param.length == 3&&Math.max(a,b,c)<=100){
+            this.bgColor = RGBA([a,b,c]);
         }else{
             throw new Error("E00005");
         }
@@ -446,7 +490,7 @@ class WebLogo{
     setpc(cmd){
         let pen = this.___getCurPen();
         if(cmd._param.length == 1){
-            pen.penColor = this.color_list[cmd._param[0]]
+            pen.penColor = this.color_list[cmd._param[0].val]
         }else if(cmd._param.length == 3){
             pen.penColor = RGBA(cmd._param);
         }else{
@@ -456,7 +500,7 @@ class WebLogo{
         console.log("设置笔色:"+pen.penColor);
     }
 
-    setw(cmd){this.___getCurPen().penWidth = cmd._param;}
+    setw(cmd){this.___getCurPen().penWidth = cmd._param.val;}
     width(){
         let r = new DrawCmd({type:"help"});
         r.help_text="Result:"+this.___getCurPen().penWidth;
@@ -495,7 +539,7 @@ class WebLogo{
                 /* await GetURL({url:`../WebLogo/helpfiles/${cmd.param}.txt`,type:"text",method:"GET",async:false})
                  .then((t)=>{console.log(2);r.help_text=`<pre>${t}</pre>`}).catch((t)=>{throw new Error(t)});*/
                 LoadResources({
-                    url:`../WebLogo/helpfiles/${cmd.param}.txt`
+                    url:`helpfiles/${cmd.param}.txt`
                     ,success:(t)=>{r.help_text=`<pre>${t}</pre>`}
                     ,error:(t)=>{r.help_text="Can't find the manual.";},async:false
                 });
@@ -618,10 +662,10 @@ class GameHelper{
         this.updateTurtles();
 
         //环境初始化
-        this.ShowResult(`Welcome to Web Logo [ver ${this.version.join(".")}]`);
+        this.ShowResult(`Welcome to Web Turtle [ver ${this.version.join(".")}]`);
         this.ShowResult("Copyright © VMWed.COM 2017");
         this.ShowResult("Try 'help' or '?' for more information.");
-        this.ShowResult("说明（临时）：https://github.com/C0618C/jGE/blob/master/WebLogo/README.md")
+        this.ShowResult("说明（临时）：https://github.com/C0618C/jGE/blob/master/WebTurtle/README.md")
         this.ShowResult("　");
         let ip_bar = document.getElementById("cmd_input");
         ip_bar.removeAttribute("disabled");
@@ -714,7 +758,7 @@ class GameHelper{
     l10n(){
         let curLang = navigator.language;
         if(curLang.includes("en")) return;        //curLang = "ru";     //测试的俄语
-        GetURL({url:`../WebLogo/i18n/${curLang}.js`,type:"script"})
+        GetURL({url:`i18n/${curLang}.js`,type:"script"})
         .then((rsl)=>{
             if(typeof web_logo_i18n != "undefined"){//本地化处理
                 this.pclogo.i18n(web_logo_i18n.cmd);
