@@ -22,15 +22,16 @@ class Cmd{
  * 绘画指令
  */
 class DrawCmd{
-    constructor({type="path",pen=null}={}){
+    constructor({type="path",pen=null,a=0,b=0,pos=null}={}){
+        this.type = type;
         if(pen!=null){
-            this.type = "path";
             this.path=[new Vector2D(pen.pos)];
             this.lineColor = pen.penColor;
             this.lineWidth = pen.penWidth;
-        }else{
-            this.type = type;
+            this.angle = pen.angle;
         }
+        if(pos) this.pos = new Vector2D(pos);
+        if(a!=0&&b!=0) this.a = a;this.b=b;
     }
 }
 /**
@@ -51,7 +52,7 @@ class PenStatu{
 class Num{
     constructor(n){
         this._v=NaN;
-        this._s=0;
+        this._s=0;//随机数开始
         this._e=0;
         this.type="number";
         this.val = n;
@@ -60,10 +61,19 @@ class Num{
         switch(this.type){
             case "number": return this._v;
             case "random": return RANDOM(this._s,this._e);
+            case "variable":return 0;
+            case "repcount":return eval(this._v.replace(/repcount/ig,this._s));
         }
     }
     set val(arr){
-        if(Array.isArray(arr) && arr[0]=="random"){
+        let w = Array.isArray(arr)?arr[0]:arr;
+        if(typeof w =="string" && w.includes("repcount")){
+            this._v = w;this.type="repcount";arr.shift();
+        }else if(typeof w =="string" && w.includes(":")){
+            this._v = 0;
+            this.type="variable";
+            this._variable = Array.isArray(arr)?arr.shift():arr;
+        }else if(w=="random"){
             this._v = 0;
             this.type = arr.shift();
             let a=arr[0];
@@ -97,27 +107,27 @@ class PCLogo{
         /**
          * 注册无参 并终结指令
          */
-        this.COMMEND_P0END = new Set(["stamprect","stampoval"]);
+        this.COMMEND_P0END = new Set(["stamprect"]);
         /**
          * 注册无参指令
          */
-        this.COMMEND_P0 = new Set(["pu","pd","ht","st","home","cs","draw","clean","ct","width","random"]);
+        this.COMMEND_P0 = new Set(["pu","pd","ht","st","home","cs","draw","clean","ct","width","random","getxy","xcor","ycor","who"]);
         /**
          * 注册1参指令
          */
-        this.COMMEND_P1 = new Set(["fd","lt","rt","bk","setw","test","wait","$turtle"]);
+        this.COMMEND_P1 = new Set(["fd","lt","rt","bk","test","wait","$turtle"]);
         /**
          * 注册1参 并终结指令
          */
         this.COMMEND_P1END = new Set(["help","?"]);
-        /**
-         * 注册2参指令
-         */
-        this.COMMEND_P2 = new Set([]);
+        // /**
+        //  * 注册2参指令
+        //  */
+        // this.COMMEND_P2 = new Set(["stampoval"]);
         /**
          * 注册可变数量数字参数指令
          */
-        this.COMMEND_P1LIST3 = new Set(["setbg","setpc"]);
+        this.COMMEND_PLIST = new Set(["setbg","setpc","stampoval","setw"]);
         /**
          * 注册特殊指令(处理器与名字相同)
          */
@@ -125,7 +135,7 @@ class PCLogo{
         /**
          * 所有可用的指令
          */
-        this.COMMEND = [...this.COMMEND_P0,...this.COMMEND_P0END,...this.COMMEND_P1,...this.COMMEND_P1END,...this.COMMEND_P2,...this.COMMEND_P1LIST3,...this.COMMEND_SP];
+        this.COMMEND = [...this.COMMEND_P0,...this.COMMEND_P0END,...this.COMMEND_P1,...this.COMMEND_P1END,/*...this.COMMEND_P2,*/...this.COMMEND_PLIST,...this.COMMEND_SP];
 
         /**
          * 用户自定义过程
@@ -139,27 +149,7 @@ class PCLogo{
         this.cmd_history=new Map();
         
         /* 转义、国际化翻译用字典 *//*NOTE: 全称命令化简配置*/
-        this._cmd_map = new Map([["repeat","rp"],["\\?","help"],["right","rt"],["left","lt"],["forward","fd"],["back","bk"]]);
-
-        this.__getANum = (s,arr)=>{
-            console.warn("已废弃，需尽早改用数字对象 Num")
-            let rsl = NaN;
-            if(this.isInCustomProcess&&s.includes(":")) rsl = s;
-            else if(s == "random"){
-                let tA = arr.shift();
-                let a = this.__getANum(tA,arr);
-                let tB = arr.shift();
-                let b = this.__getANum(tB,arr);
-                console.info(a,b);
-                if(Object.is(NaN,b)||b==undefined){
-                    if(tB!=undefined)arr.unshift(tB);
-                    rsl = RANDOM(0,a-1);
-                }else{
-                    rsl = RANDOM(a,b);
-                }
-            }else try{rsl = eval(s)}catch(e){}
-            return rsl;
-        };
+        this._cmd_map = new Map([["repeat","rp"],["\\?","help"],["right","rt"],["left","lt"],["forward","fd"],["back","bk"],["setpencolor","setpc"],["setpensize","setw"]]);
 
         this.isInCustomProcess = false;
 
@@ -186,7 +176,7 @@ class PCLogo{
         for(let c of this.COMMEND_P0END) this.Lexical.set(c,this.c1end);
         for(let c of this.COMMEND_P1) this.Lexical.set(c,this.c1n1);
         for(let c of this.COMMEND_P1END) this.Lexical.set(c,this.c1p1end);
-        for(let c of this.COMMEND_P1LIST3) this.Lexical.set(c,this.c1p1list3);
+        for(let c of this.COMMEND_PLIST) this.Lexical.set(c,this.c1plist);
         for(let c of this.COMMEND_SP) this.Lexical.set(c,this[c]);
     }
 
@@ -265,23 +255,31 @@ class PCLogo{
     }
 
     //一个数字或者3个数字的数组 如 cmd [12 34 56] 或 cmd 3
-    c1p1list3(arr,word){
+    c1plist(arr,word){
         let _c=new Cmd(word);
-        _c.param=[];
-        if(arr[0]=="["&&arr[4]=="]"){
-            let a,b,c = 0;
-            a = this.__getANum(arr.shift(),arr);
-            b = this.__getANum(arr.shift(),arr);
-            c = this.__getANum(arr.shift(),arr);
-            _c.param.push(a,b,c);
+        _c.param=this.numlist(arr);
+        return _c;
+    }
+
+    numlist(arr){
+        let tArr = [];
+        if(arr[0]=="["){
+            do{
+                tArr.push(arr.shift());
+            }while(arr.length>0&&arr[0]!="]");
+            tArr.shift();
             arr.shift();
         }else{
-            _c.param.push(new Num(arr));
+            tArr = arr;
         }
-
-        if(!_c.param.every(i=>!Object.is(i,NaN))) throw new Error(`E00006|${word}`);
-
-        return _c;
+        let rsl = [];
+        let tn;
+        do{
+            tn = new Num(tArr);
+            if(Object.is(tn._v,NaN)) break;
+            rsl.push(tn);
+        }while(tArr.length>0);
+        return rsl;
     }
 
     //解释用户自定义过程
@@ -464,8 +462,13 @@ class WebLogo{
 
     rp(cmd){/*repeat*/
         for(let i=0;i<cmd.param.val;i++){
+            cmd.sub_cmd.every(c=>{if(c._param.type=="repcount")c._param._s = i;return true;});
             this.exe(cmd.sub_cmd);
         }
+    }
+    stampoval(cmd){
+        if(cmd.param.length != 2)throw new Error(`E00007|${cmd.name}`);
+        this.drawCmds[this.curPen].push(new DrawCmd({type:"stampoval",a:cmd.param[0].val,b:cmd.param[1].val,pos:this.___getCurPen().pos,pen:this.___getCurPen()}));
     }
 
     /* **************画笔 操作指令 ****************/
@@ -475,38 +478,34 @@ class WebLogo{
         this.___getCurPen().penDown = true;
         this.drawCmds[this.curPen].push(new DrawCmd({pen:this.___getCurPen()}));
     }
-    setbg(cmd){
+
+    ___getColor(cmd){
         let [a,b={val:0},c={val:0}] = cmd._param;
         a = a.val;        b = b.val;        c = c.val;
+        let colorResult = "";
         if(cmd._param.length == 1&& a>=0&&a<this.color_list.length){
-            this.bgColor= this.color_list[a];
+            colorResult= this.color_list[a];
         }else if(cmd._param.length == 3&&Math.max(a,b,c)<=100){
-            this.bgColor = RGBA([a,b,c]);
+            colorResult = RGBA([a,b,c]);
         }else{
             throw new Error("E00005");
         }
+        return colorResult;
     }
+    setbg(cmd){this.bgColor = this.___getColor(cmd);}
+    setpc(cmd){this.___getCurPen().penColor = this.___getColor(cmd);}
 
-    setpc(cmd){
-        let pen = this.___getCurPen();
-        if(cmd._param.length == 1){
-            pen.penColor = this.color_list[cmd._param[0].val]
-        }else if(cmd._param.length == 3){
-            pen.penColor = RGBA(cmd._param);
-        }else{
-            throw new Error("E00005");
-        }
-
-        console.log("设置笔色:"+pen.penColor);
-    }
-
-    setw(cmd){this.___getCurPen().penWidth = cmd._param.val;}
+    setw(cmd){this.___getCurPen().penWidth = cmd._param[0].val;}
     width(){
         let r = new DrawCmd({type:"help"});
         r.help_text="Result:"+this.___getCurPen().penWidth;
         this.drawCmds[this.curPen]=[r];
     }
-
+    who(){
+        let r = new DrawCmd({type:"help"});
+        r.help_text="Result:"+this.activePens.join();
+        this.drawCmds[this.curPen]=[r];
+    }
     /* ****************** 编程指令 ****************/
     to(cmd){}
     random(cmd){}
@@ -525,6 +524,16 @@ class WebLogo{
         this.clean();
         this.home();
     }
+    draw(cmd){
+        this.cs();
+        let bg = new Cmd()
+        bg._param = [new Num(0)];
+        this.setbg(bg);
+        let pc = new Cmd();
+        pc._param = [new Num(7)];
+        this.setpc(pc);
+        this.activePens=[0];
+    }
 
     /* **************命令窗相关 操作指令 ****************/
     help(cmd){
@@ -532,7 +541,7 @@ class WebLogo{
         let r = this.__helpRsl.get(cmd.param);
         if(r == undefined){
              r = new DrawCmd({type:"help"});
-             r.help_text="Can't find the manual.";
+             r.help_text="Sorry, Can't find the manual.";
              if(!cmd.param){
                  r.help_text="<span class='help_cmd'>"+this.La.COMMEND.sort().join("</span><span class='help_cmd'>").toUpperCase()+"</span>";
              }else{
@@ -555,13 +564,13 @@ class WebLogo{
     /* **************扩展指令 与logo不兼容的指令 ****************/
     //更换海龟的样子
     $turtle(cmd){
-        this.___getCurPen().style = cmd._param;
+        this.___getCurPen().style = cmd._param.val;
     }
 }
 
 class GameHelper{
     constructor(gameEngine){
-        this.version = [2,0,0];
+        this.version = [2,0,1];
         this.ge = gameEngine;
         let w = this.ge.run.width/2;
         let h = this.ge.run.height/2
@@ -580,6 +589,7 @@ class GameHelper{
                     ,["E00004","SyntaxError:missing '$1' after commends."]
                     ,["E00005","Error:illegal of color setting,use help for more info."]
                     ,["E00006","Illegal number after '$1'."]
+                    ,["E00007","'$1' need two number as param,use 'help $1' for more info."]
                 ]);
 
         this.l10n();
@@ -632,7 +642,7 @@ class GameHelper{
     turtleMaker(basePose,style){
         let turtleObj = new ShowObj(basePose);
         turtleObj.index = 1000+this.turtleHouse.length;
-        let turtleStyle=[,'🐙','🐞','🐾','😼','📍','🎃','👽','👻','🐼'];
+        let turtleStyle=[,'🐙','🐞','🐾','😼','📍','🎃','👽','👻','🐼','🐶','🍁','🍀','🐷','🌸','🍄'];
         let curStyle = turtleStyle[style];
         switch(style){
             case 0:
@@ -686,8 +696,14 @@ class GameHelper{
                             console.debug("监控到只有一个点的路径");
                             continue;
                         }
-                        console.log(dC);
-                        newpath.add(new $tk_path({styleType:'stroke',style:`${dC.lineColor} ${dC.lineWidth}` ,points:dC.path}));// round round
+                        newpath.add(new $tk_path({styleType:'stroke',style:`${dC.lineColor} ${dC.lineWidth} round round` ,points:dC.path}));// round round
+                        break;
+                    case "stampoval":
+                        let ellipseObj = new ShowObj(dC.pos);
+                        ellipseObj.angle = DEG2RAG(dC.angle)+π/2;
+                        ellipseObj.add(new $tk_ellipse({styleType:'stroke',style:`${dC.lineColor} ${dC.lineWidth}` ,a:dC.a,b:dC.b}));// round round
+                        this.turtleHouse[i].myShowItem.push(ellipseObj);
+                        this.ge.add(ellipseObj);
                         break;
                     case "cs":
                         for(let s of this.turtleHouse[i].myShowItem) s.isDel = true;
@@ -718,7 +734,7 @@ class GameHelper{
 
             if(t.showStyle != p.style){
                 this.ge.del(t.obj);
-                t.showStyle = t.style;
+                t.showStyle = p.style;
                 t.obj = this.turtleMaker(p.pos,p.style);
                 this.ge.add(t.obj);
             }
@@ -731,6 +747,7 @@ class GameHelper{
                         l.setStyle({fillStyle:p.penColor,strokeStylest:`${p.penColor} 1`});
                     }
                 }
+                t.showColor = p.penColor;
             }
 
             t.goto(p.pos,p.angle);
@@ -746,7 +763,7 @@ class GameHelper{
             p.style.color="#a94442";
             let [errcode,...errparam] = text.split("|");
             let errText = this.errInfo.get(errcode)||errcode;
-            errparam.map((param,index)=>errText=errText.replace(new RegExp("\\$"+(index+1)),param));
+            errparam.map((param,index)=>errText=errText.replace(new RegExp("\\$"+(index+1),"g"),param));
             p.innerHTML = errText;
         }else if(help){
             p.innerHTML = text;
@@ -826,3 +843,4 @@ function RANDOM(a,b){
     let rd = (n)=>Math.floor(Math.random()*1000%n);
     return rd(b-a+1)+a;
 }
+

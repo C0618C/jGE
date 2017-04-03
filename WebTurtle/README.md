@@ -5,6 +5,16 @@
 
 部署地址：<http://www.vmwed.com/sb/webturtle/>  
 
+## 关于Logo流派、Web Turtle所用语法及说明
+Logo的发展史及流派可看维基百科[Logo(programming_language)](https://en.wikipedia.org/wiki/Logo_%28programming_language%29)  
+Web Turtle支持如下的流派：
+* [BERKELEY LOGO(UCBLogo)](https://people.eecs.berkeley.edu/~bh/v2ch14/manual.html)
+* PC Logo
+* MSWLogo  
+
+尽管BERKELEY LOGO有详尽的手册，但国内大部分Logo的教材和例子基于PC Logo和MSWLogo，所以支持的指令优先以这两种为准。但又因为这两者缺乏手册，所以部分指令是按照教材上对结果的描述，反推出来的（尤其对应BERKELEY LOGO中没有的指令如stampoval、stamprect、setw等），所以可能会导致一种糅合的语法而且不被上述三种所识别，这种现象我会尽量消除。
+但因为采用兼容性语法，可能会导致在Web Turtle上能成功的作品在上述三种程序中均有各自的错误，针对此，我将做一个语法开关，和提供相应的风格校验、转换工具。
+
 ## 操作指引
 1. 在页面底部有指令输入栏，用于输入指令。
 1. 输入指令如 `fd 10` 并按回车，屏幕中海龟将执行向前走10步的指令。
@@ -46,26 +56,70 @@ random | 数字 | 随机 | random 30 | 产生一个0到30之间的随机数
 ## 代码举例
 描述 | 代码
 --|--
-雨伞 | rp 180[rt 1 fd 60*pi/180] rt 90 pu fd 120 rt 90 pd rp 3[rp 180[rt 1 fd 20*pi/180] rt 180] pu fd 68 rt 90 bk 60 rt 90 pd fd 8 pu fd 40 pd fd 80 rp 180[rt 1 fd 9*pi/180] 
+复杂花纹|fd 200 clean repeat 12 [repeat 75 [fd 100 bk 100 rt 2] fd 250]
+花纹 | repeat 4000 [repeat 34 [fd 12 rt 10] rt 90]
+雨伞 | `rp 180[rt 1 fd 60*pi/180] rt 90 pu fd 120 rt 90 pd rp 3[rp 180[rt 1 fd 20*pi/180] rt 180] pu fd 68 rt 90 bk 60 rt 90 pd fd 8 pu fd 40 pd fd 80 rp 180[rt 1 fd 9*pi/180]` 
 蒲公英 | repeat 24[fd 40 lt 45 fd 15 bk 15 rt 90 fd 15 bk 15  lt 45 bk 40 rt 360/24] bk 200
 蒲公英 | 重复 24[前进 40 左转 45 前进 15 后退 15 右转 90 前进 15 后退 15  左转 45 后退 40 右转 360/24] 后退 200
-五角星(定义过程) | to lwjx :b rt 18 repeat 5[fd :b rt 144 fd :b rt 54 fd :b*1.9 bk :b*1.9 lt 126] end lwjx 150
+五角星(定义过程) | `to lwjx :b rt 18 repeat 5[fd :b rt 144 fd :b rt 54 fd :b*1.9 bk :b*1.9 lt 126] end lwjx 150`
+五角花 | repeat 1800 [fd 10 rt repcount + .1]
+花环 | rp 3600 [ fd 5 rt repcount+0.4 ]
+花 | rp 3600 [ fd 10 rt repcount+0.2 ]
 花纹 | rp 45 [ setpc random 16 fd 250 rt 178 fd 250 lt 182 ]
 花纹 | repeat 15 [ lt 360/15 fd 80 repeat 20 [ fd 20 lt 45 fd 10 bk 10 rt 90 fd 10 bk 10 lt 45 bk 20 rt 360/20 ] bk 80 ]
+花纹 | repeat 8 [rt 45 repeat 6 [repeat 90 [fd 4 rt 2]rt 90]]
 直线圆 | rp 45 [ setpc random 16 fd 300 rt 128 ] 
 花朵 | rp 6[lt 45 rp 4[rp 9[fd 5 rt 10] rp 9[fd 5 lt 10] rt 90]rt 105]
 矩形纹 | rp 8[fd 30 lt 45 rp 4 [fd 25 rt 90] rt 45 fd 10 lt 45 rp 4 [fd 50 rt 90] rt 45 bk 40 rt 360/8]
+矩形纹 | repeat 8 [repeat 4 [rt 90 fd 100] bk 100 lt 45]
 彩笔示范 | setw20 fd 50 setpc 4 fd 50 setpc 6 fd 50 setpc [20 20 100] fd 50
 涂鸦（会卡）| rp 100[rp 100 [ setpc random 16 fd random 200 rt random 360 ] home ]
+原子模型 | rp 4 [ stampoval 100 50 rt 45 ]
+网状环 | rp 60[stampoval 200 100 rt 3 ]
+环线管 | rp 60[stampoval 100 50 rt 3 fd 10]
+海螺 | rp 120 [ stampoval 100 50 rt 3 fd 5 ] rp 60[stampoval 100 50 rt 3 fd 10]
 
+注:部分例子摘录于 Logo 15-word challenge [参考1]  
+
+[参考1]: http://www.mathcats.com/gallery/15wordcontest.html "Write a Logo one-liner using 15 or fewer words, not counting square brackets and parentheses, to produce the most beautiful, complex, and interesting picture."
+
+
+### 网友作品
+```
+;Denius 2017-04-03
+cs pd setw 1
+fd 100 rt 90 fd 25 repeat 180[fd ((π*50)/180) rt 1] fd 25 
+pu 
+bk 100 rt 90 fd 25
+pd
+rt 90 fd 25 lt 90 repeat 270[fd ((π*25)/180) lt 1] fd 30 
+lt 90 fd 50 bk 25 repeat 180[fd ((π*25)/180) rt 1] fd 25 
+pu 
+lt 90 fd 10 lt 90
+pd
+fd 50 pu fd 10 pd setw 2 fd 2 setw 1
+pu 
+bk 2+10 rt 90 fd 10 rt 90
+pd
+fd 25 repeat 180[fd ((π*25)/180) lt 1] fd 25
+pu 
+rt 90 fd 6+(25/2)+25/1.414 rt 90 fd 5 rt 90+45
+pd 
+repeat (180+45)[fd ((π*(25/2))/180) lt 1]
+repeat (180+45)[fd ((π*(25/2))/180) rt 1] repeat 10[fd 1 lt 4]
+pu 
+fd 3000
+```
 
 ## 颜色代码和颜色数组
 ### 颜色代码
 `setpc` 和 `setbg` 需要用到颜色代码（0-15），代码与颜色对照如下表：
+```
 	 0  black	 1  blue	 2  green	 3  cyan
 	 4  red		 5  magenta	 6  yellow	 7 white
 	 8  brown	 9  tan		10  forest	11  aqua
 	12  salmon	13  purple	14  orange	15  grey
+```
 ### 颜色数组
 在支持使用颜色数组的地方，可以用 [R G B] 方式表示颜色。其中R、G、B分别为红、绿、蓝在颜色中的比例，取值为0～100。
 示例：
@@ -75,14 +129,12 @@ setbg [100 50 50] setpc [10 100 10]
 
 
 ## TODO List
-* 支持指令 ~~setw、setbg、setpc~~、ht、st、~~ct、clean~~、draw
-* 支持指令 wait、random
+* 支持指令 ht、st
+* 支持指令 wait、go、repcount
 * 支持多行录入、行尾`;`注释
-* ~~根据浏览器语言自动本地化~~
-* ~~help指令~~
-* ~~换成海龟~~
-* 多线程做图(ask指令的支持)
-* 支持新增数组形式类型参数的支持
+* 多线程做图(ask、tell、tellall、each指令的支持)
+* 支持setxy fill
+* 支持更多的数据类型
 
 
 ## 版本记录
