@@ -135,6 +135,7 @@ setbg [100 50 50] setpc [10 100 10]
 * 多线程做图(ask、tell、tellall、each指令的支持)
 * 支持setxy fill
 * 支持更多的数据类型
+* 支持$undo $redo
 
 
 ## 版本记录
