@@ -111,7 +111,7 @@ class PCLogo{
         /**
          * 注册无参指令
          */
-        this.COMMEND_P0 = new Set(["pu","pd","ht","st","home","cs","draw","clean","ct","width","random","getxy","xcor","ycor","who"]);
+        this.COMMEND_P0 = new Set(["pu","pd","ht","st","home","cs","draw","clean","ct","width","random","getxy","xcor","ycor","who","fill","$undo","$redo"]);
         /**
          * 注册1参指令
          */
@@ -127,11 +127,11 @@ class PCLogo{
         /**
          * 注册可变数量数字参数指令
          */
-        this.COMMEND_PLIST = new Set(["setbg","setpc","stampoval","setw"]);
+        this.COMMEND_PLIST = new Set(["setbg","setpc","stampoval","setw","tell"]);
         /**
          * 注册特殊指令(处理器与名字相同)
          */
-        this.COMMEND_SP = new Set(["rp","to","ask","tell","tellall","each"]);
+        this.COMMEND_SP = new Set(["rp","to","ask","tellall","each"]);
         /**
          * 所有可用的指令
          */
@@ -186,10 +186,10 @@ class PCLogo{
      */
     compile(cmd){
         //预处理
-        cmd = cmd.replace(/\[/g," [ ").replace(/\]/g," ] ").replace(/\s+/g," ").toLocaleLowerCase();
+        cmd = cmd.replace(/(\[|\()/g," $1 ").replace(/(\]|\))/g," $1 ").replace(/\s+/g," ").toLocaleLowerCase();
         cmd = this.i18nToen(cmd);
         cmd = cmd.replace(/\(\s*/g,"(").replace(/\s*\)/g,")").replace(/\s*\*\s*/g,"*").replace(/\s*\/\s*/g,"\/").replace(/\s*\-\s*/g,"-").replace(/\s*\+\s*/g,"+");
-        
+
         let rsl = this.cmd_history.get(cmd);
         if(!rsl){
             rsl = this.analysis(cmd.match(/[^\s\r\n]+/ig));
@@ -203,6 +203,9 @@ class PCLogo{
 
     //分析
     analysis(arr){
+        //DEBUG:输出指令的解释结果
+        //console.debug(arr);
+
         if(arr == null) return [];
 
         let word = arr.shift();
@@ -326,14 +329,17 @@ class PCLogo{
         return _c;
     }
 
-    rp(arr){
-        let _c = this.c1n1(arr,"rp");
+    __rp_style(arr,type){
+        let _c = this.c1n1(arr,type);
         let tk = arr.shift();
         if(tk!=="["){
             throw new Error("Expected token [ before "+tk);
         }
         return this.codeblock(arr,_c,"[","]")
     }
+    rp(arr){return this.__rp_style(arr,"rp");}
+    ask(arr){return this.__rp_style(arr,"ask");}
+
     to(arr){
         let _c = new Cmd("to");
         let funName = arr.shift();
@@ -561,6 +567,17 @@ class WebLogo{
         this.drawCmds[this.curPen] = [new DrawCmd({type:"ClearText"})];
     }
 
+    /* **************多龟指令 处理指令 ****************/
+    ask(cmd){
+        this.curPen = cmd._param.val;
+        this.activePens = [this.curPen];
+        if(!this.___getCurPen()){
+             this.pens[this.curPen] = new PenStatu(this.homePos);
+             this.drawCmds[this.curPen]=[new DrawCmd({pen:this.___getCurPen()})];
+        }
+        this.exe(cmd.sub_cmd);
+    }
+
     /* **************扩展指令 与logo不兼容的指令 ****************/
     //更换海龟的样子
     $turtle(cmd){
@@ -570,7 +587,7 @@ class WebLogo{
 
 class GameHelper{
     constructor(gameEngine){
-        this.version = [2,0,1];
+        this.version = [2,1,0];
         this.ge = gameEngine;
         let w = this.ge.run.width/2;
         let h = this.ge.run.height/2
