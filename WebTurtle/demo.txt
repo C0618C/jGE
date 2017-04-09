@@ -54,6 +54,11 @@ fd 50 setpc 1 fd 50 setpc 2 fd 50 setpc 3 fd 50
 setw random 0 15 width
 setbg [random 0 100 random 0 100 random 0 100]
 
+//多线程测试
+ask 1 [rt 60] ask 2 [rt 120] ask 3 [rt 180] ask 4 [rt 240] ask 5 [rt 300] 
+tell [0 1 2 3 4 5]
+fd 100
+
 
 失败记录 
 
@@ -67,6 +72,9 @@ setbg [random 0 100 random 0 100 random 0 100]
 
 
 --目前不能
+repeat 360 [repeat repcount [repeat repcount [fd repcount lt 15] home] lt 1]
+
+
 
 --递归
 to spiral :size
@@ -144,3 +152,9 @@ to randomcolor
 end
 clearscreen
 repeat 36 [ randomcolor square random 200 rt 10 ]
+
+
+http://www.mathcats.com/gallery/15wordcontest.html
+
+https://mc.zzidc.com/hyzx/caiwu/showTransPager.action
+vmwed@453247629

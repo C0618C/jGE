@@ -78,6 +78,8 @@ random | 数字 | 随机 | random 30 | 产生一个0到30之间的随机数
 网状环 | rp 60[stampoval 200 100 rt 3 ]
 环线管 | rp 60[stampoval 100 50 rt 3 fd 10]
 海螺 | rp 120 [ stampoval 100 50 rt 3 fd 5 ] rp 60[stampoval 100 50 rt 3 fd 10]
+放射线 | repeat 180 [fd 500 bk 500 rt 2]
+线 | repeat 25 [repeat 15 [fd 100 bk 100 rt 5] fd 100] 
 
 注:部分例子摘录于 Logo 15-word challenge [参考1]  
 
@@ -130,10 +132,9 @@ setbg [100 50 50] setpc [10 100 10]
 
 ## TODO List
 * 支持指令 ht、st
-* 支持指令 wait、go、repcount
+* 支持指令 for、wait、go、repcount
 * 支持多行录入、行尾`;`注释
-* 多线程做图(ask、tell、tellall、each指令的支持)
-* 支持setxy fill
+* 支持setxy、seth、fill
 * 支持更多的数据类型
 * 支持$undo $redo
 
