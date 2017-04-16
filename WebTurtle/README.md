@@ -134,9 +134,9 @@ setbg [100 50 50] setpc [10 100 10]
 * 支持指令 ht、st
 * 支持指令 for、wait、go、repcount
 * 支持多行录入、行尾`;`注释
-* 支持setxy、seth、fill
+* 支持~~setxy、seth~~、fill
 * 支持更多的数据类型
-* 支持$undo $redo
+* 播放绘画过程
 
 
 ## 版本记录

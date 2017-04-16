@@ -116,7 +116,7 @@ class PCLogo{
         /**
          * 注册1参指令
          */
-        this.COMMEND_P1 = new Set(["fd","lt","rt","bk","test","wait","$turtle"]);
+        this.COMMEND_P1 = new Set(["fd","lt","rt","bk","test","wait","$turtle","setx","sety","seth"]);
         /**
          * 注册1参 并终结指令
          */
@@ -128,7 +128,7 @@ class PCLogo{
         /**
          * 注册可变数量数字参数指令
          */
-        this.COMMEND_PLIST = new Set(["setbg","setpc","stampoval","setw","tell","tellall"]);
+        this.COMMEND_PLIST = new Set(["setbg","setpc","stampoval","setw","tell","tellall","setxy"]);
         /**
          * 注册特殊指令(处理器与名字相同)
          */
@@ -528,6 +528,19 @@ class WebLogo{
     random(cmd){}
 
     /* **************LOGO 操作指令 ****************/
+    seth(cmd){this.___getCurPen().angle = cmd._param.val;}
+    setx(cmd){
+        this.___getCurPen().pos.Copy(new Vector2D(this.homePos.x+cmd._param.val,this.___getCurPen().pos.y));
+        this.___drawHelp();
+    }
+    sety(cmd){
+        this.___getCurPen().pos.Copy(new Vector2D(this.___getCurPen().pos.x,this.homePos.y-cmd._param.val));
+        this.___drawHelp();
+    }
+    setxy(cmd){
+        this.___getCurPen().pos.Copy(new Vector2D(this.homePos.x+cmd._param[0].val,this.homePos.y-cmd._param[1].val));
+        this.___drawHelp();
+    }
     home(cmd){
         this.___getCurPen().angle = 0;
         this.___getCurPen().pos.Copy(this.homePos);
@@ -621,7 +634,7 @@ class WebLogo{
 
 class GameHelper{
     constructor(gameEngine){
-        this.version = [2,1,0];
+        this.version = [2,2,0];
         this.ge = gameEngine;
         let w = this.ge.run.width/2;
         let h = this.ge.run.height/2
