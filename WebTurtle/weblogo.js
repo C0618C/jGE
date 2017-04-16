@@ -531,7 +531,7 @@ class WebLogo{
     home(cmd){
         this.___getCurPen().angle = 0;
         this.___getCurPen().pos.Copy(this.homePos);
-        this.drawCmds[this.curPen].push(new DrawCmd({pen:this.___getCurPen()}));       
+        this.___drawHelp();
     }
     clean(cmd){
         this.drawCmds[this.curPen] = [new DrawCmd({type:"cs"})];
@@ -796,9 +796,10 @@ class GameHelper{
         this.deliverer.set("help",(dC)=>this.ShowResult(dC.help_text,{help:true}));
         this.deliverer.set("ct",()=>this.ShowResult("",{cls:true}));    //清除命令栏内容
         this.deliverer.set("$undo",()=>{
-            this.__dolist[this.curDoIndex].line.isDel = true;
-            this.pclogo.___getCurPen().pos.Copy(this.__dolist[this.curDoIndex].pos);
-            this.pclogo.___getCurPen().angle = this.__dolist[this.curDoIndex].ag;
+            let curSet = this.__dolist.pop();
+            curSet.line.isDel = true;
+            this.pclogo.___getCurPen().pos.Copy(curSet.pos);
+            this.pclogo.___getCurPen().angle = curSet.ag;
             this.curDoIndex--;
             this.updateTurtles();
         });
