@@ -9,10 +9,11 @@ let pi = π;
 class Cmd{
     constructor(name){
         this.name = name;
+        this.__pp_name = Symbol("param");
     }
 
-    set param(p){this._param = p;}
-    get param(){return this._param;}
+    set param(p){this[this.__pp_name] = p;}
+    get param(){return this[this.__pp_name];}
 
     get sub_cmd(){return this._subcmd_;}
     set sub_cmd(cmd){this._subcmd_ = cmd;}
@@ -62,7 +63,7 @@ class Num{
         switch(this.type){
             case "number": return this._v;
             case "random": return RANDOM(this._s,this._e);
-            case "variable":return 0;
+            //case "variable":return 0;
             case "repcount":return eval(this._v.replace(/repcount/ig,this._s));
         }
     }
@@ -309,7 +310,7 @@ class PCLogo{
      * @param {*结束标记} cend 
      * @param {*是否允许嵌套} nesting 
      */
-    codeblock(arr,_c,cbegin,cend,nesting=true){
+    codeblock(arr,_c,cbegin,cend,nesting=true,isAnalysis = true){
         let lv = 0;
         let childCMD=[];
         let c="";
@@ -327,7 +328,7 @@ class PCLogo{
         }
 
         _c.codeblock = childCMD.concat();
-        _c.sub_cmd = this.analysis(childCMD);
+        if(isAnalysis)_c.sub_cmd = this.analysis(childCMD);
 
         return _c;
     }
@@ -352,10 +353,20 @@ class PCLogo{
             _c.param.push(arr.shift());
         }
         this.isInCustomProcess = true;
-        this.codeblock(arr,_c,"to","end",false);
+        this.codeblock(arr,_c,"to","end",false,false);
         this.isInCustomProcess = false;
         this.CusFun.set(funName,_c);
         return _c;
+    }
+    
+    for(arr){
+        let _p = new Cmd("for");
+        if(arr.shift() == "[")  this.codeblock(arr,_p,"[","]",false,false);
+        let _cmd = new Cmd("for");
+        if(arr.shift() == "[")  this.codeblock(arr,_cmd,"[","]",true,false);
+        _cmd.param = _p.codeblock.concat();
+        //TODO:语法分析及参数大小判断
+        return _cmd;
     }
 }
 
@@ -463,23 +474,23 @@ class WebLogo{
 
     fd(cmd){
         let ag = DEG2RAG(this.___getCurPen().angle);
-        let l = cmd._param.val*this.sln;
+        let l = cmd.param.val*this.sln;
         this.___getCurPen().pos.AddIn(new Vector2D(Math.cos(ag)*l,Math.sin(ag)*l));
         this.___drawHelp();
     }
     bk(cmd){
         let ag = DEG2RAG(this.___getCurPen().angle);
-        let l = cmd._param.val*this.sln;
+        let l = cmd.param.val*this.sln;
         this.___getCurPen().pos.MinusIn(new Vector2D(Math.cos(ag)*l,Math.sin(ag)*l));
         this.___drawHelp();
     }
 
-    lt(cmd){this.___getCurPen().angle -= cmd._param.val;}
-    rt(cmd){this.___getCurPen().angle += cmd._param.val;}
+    lt(cmd){this.___getCurPen().angle -= cmd.param.val;}
+    rt(cmd){this.___getCurPen().angle += cmd.param.val;}
 
     rp(cmd){/*repeat*/
         for(let i=0;i<cmd.param.val;i++){
-            cmd.sub_cmd.every(c=>{if(c._param.type=="repcount")c._param._s = i;return true;});
+            cmd.sub_cmd.every(c=>{if(c.param.type=="repcount")c.param._s = i;return true;});
             this.exe(cmd.sub_cmd);
         }
     }
@@ -497,12 +508,12 @@ class WebLogo{
     }
 
     ___getColor(cmd){
-        let [a,b={val:0},c={val:0}] = cmd._param;
+        let [a,b={val:0},c={val:0}] = cmd.param;
         a = a.val;        b = b.val;        c = c.val;
         let colorResult = "";
-        if(cmd._param.length == 1&& a>=0&&a<this.color_list.length){
+        if(cmd.param.length == 1&& a>=0&&a<this.color_list.length){
             colorResult= this.color_list[a];
-        }else if(cmd._param.length == 3&&Math.max(a,b,c)<=100){
+        }else if(cmd.param.length == 3&&Math.max(a,b,c)<=100){
             colorResult = RGBA([a,b,c]);
         }else{
             throw new Error("E00005");
@@ -512,7 +523,7 @@ class WebLogo{
     setbg(cmd){this.bgColor = this.___getColor(cmd);}
     setpc(cmd){this.___getCurPen().penColor = this.___getColor(cmd);}
 
-    setw(cmd){this.___getCurPen().penWidth = cmd._param[0].val;}
+    setw(cmd){this.___getCurPen().penWidth = cmd.param[0].val;}
     width(){
         let r = new DrawCmd({type:"help"});
         r.help_text="Result:"+this.___getCurPen().penWidth;
@@ -526,19 +537,31 @@ class WebLogo{
     /* ****************** 编程指令 ****************/
     to(cmd){}
     random(cmd){}
+    for(cmd){
+        let variable = cmd.param[0];
+        let __star = cmd.param[1]*1;
+        let __end = cmd.param[2]*1;
+        let __step = (cmd.param[3]||1)*1;
+
+        let v = new RegExp(`:${variable}`,"gm");
+        for(let i = __star;i<__end;i+=__step){
+            this.exe(this.La.analysis(cmd.codeblock.map(c=>c.replace(v,i))));
+        }
+        
+    }
 
     /* **************LOGO 操作指令 ****************/
-    seth(cmd){this.___getCurPen().angle = cmd._param.val;}
+    seth(cmd){this.___getCurPen().angle = cmd.param.val;}
     setx(cmd){
-        this.___getCurPen().pos.Copy(new Vector2D(this.homePos.x+cmd._param.val,this.___getCurPen().pos.y));
+        this.___getCurPen().pos.Copy(new Vector2D(this.homePos.x+cmd.param.val,this.___getCurPen().pos.y));
         this.___drawHelp();
     }
     sety(cmd){
-        this.___getCurPen().pos.Copy(new Vector2D(this.___getCurPen().pos.x,this.homePos.y-cmd._param.val));
+        this.___getCurPen().pos.Copy(new Vector2D(this.___getCurPen().pos.x,this.homePos.y-cmd.param.val));
         this.___drawHelp();
     }
     setxy(cmd){
-        this.___getCurPen().pos.Copy(new Vector2D(this.homePos.x+cmd._param[0].val,this.homePos.y-cmd._param[1].val));
+        this.___getCurPen().pos.Copy(new Vector2D(this.homePos.x+cmd.param[0].val,this.homePos.y-cmd.param[1].val));
         this.___drawHelp();
     }
     home(cmd){
@@ -564,10 +587,10 @@ class WebLogo{
         this.activePens=[0];
 
         let bg = new Cmd()
-        bg._param = [new Num(0)];
+        bg.param = [new Num(0)];
         this.setbg(bg);
         let pc = new Cmd();
-        pc._param = [new Num(7)];
+        pc.param = [new Num(7)];
         this.setpc(pc);
         this.isMultiPen = false;
     }
@@ -597,7 +620,7 @@ class WebLogo{
 
     /* **************多龟指令 处理指令 ****************/
     ask(cmd){
-        this.curPen = cmd._param.val;
+        this.curPen = cmd.param.val;
         this.activePens = [this.curPen];
         if(!this.___getCurPen()){
              this.pens[this.curPen] = new PenStatu(this.homePos);
@@ -609,7 +632,7 @@ class WebLogo{
     tell(cmd){
         this.isMultiPen = true;
         this.activePens = [];
-        cmd._param.map(c=>{
+        cmd.param.map(c=>{
             if(this.pens[c.val] == undefined) this.pens[c.val]=new PenStatu(this.homePos);
             this.activePens.push(c.val);
         });
@@ -617,8 +640,8 @@ class WebLogo{
     tellall(cmd){
         this.isMultiPen = true;
         this.activePens = [];
-        let a = cmd._param[0].val;
-        let b = cmd._param[1].val;
+        let a = cmd.param[0].val;
+        let b = cmd.param[1].val;
         for(let p = Math.min(a,b);p<=Math.max(a,b);p++){
             if(this.pens[p] == undefined) this.pens[p]=new PenStatu(this.homePos);
             this.activePens.push(p);
@@ -628,13 +651,13 @@ class WebLogo{
     /* **************扩展指令 与logo不兼容的指令 ****************/
     //更换海龟的样子
     $turtle(cmd){
-        this.___getCurPen().style = cmd._param.val;
+        this.___getCurPen().style = cmd.param.val;
     }
 }
 
 class GameHelper{
     constructor(gameEngine){
-        this.version = [2,2,0];
+        this.version = [2,3,0];
         this.ge = gameEngine;
         let w = this.ge.run.width/2;
         let h = this.ge.run.height/2

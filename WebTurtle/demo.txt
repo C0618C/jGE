@@ -156,5 +156,7 @@ repeat 36 [ randomcolor square random 200 rt 10 ]
 
 http://www.mathcats.com/gallery/15wordcontest.html
 
+http://www.calormen.com/jslogo/
+
 https://mc.zzidc.com/hyzx/caiwu/showTransPager.action
 vmwed@453247629

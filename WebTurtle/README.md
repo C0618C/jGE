@@ -132,7 +132,7 @@ setbg [100 50 50] setpc [10 100 10]
 
 ## TODO List
 * 支持指令 ht、st
-* 支持指令 for、wait、go、repcount
+* 支持指令 ~~for~~、wait、go、~~repcount~~
 * 支持多行录入、行尾`;`注释
 * 支持~~setxy、seth~~、fill
 * 支持更多的数据类型
@@ -140,6 +140,10 @@ setbg [100 50 50] setpc [10 100 10]
 
 
 ## 版本记录
+* v2.3.0    2017-04-22
+    新增指令for。已能画出大部分Logo 15-word challenge的图案。
+* v2.2.0    2017-04-16
+    新增setx sety setxy seth
 * v2.1.1    2017-04-9
     $undo、$redo
     修正home
