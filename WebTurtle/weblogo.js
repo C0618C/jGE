@@ -574,8 +574,8 @@ class WebLogo{
         this.drawCmds[this.curPen].push(new DrawCmd({pen:this.___getCurPen()}));
     }
     cs(cmd){
-        this.clean();
         this.home();
+        this.clean();       
     }
     draw(cmd){
         this.pens.forEach((p,i)=>{
@@ -657,7 +657,7 @@ class WebLogo{
 
 class GameHelper{
     constructor(gameEngine){
-        this.version = [2,3,0];
+        this.version = [2,3,1];
         this.ge = gameEngine;
         let w = this.ge.run.width/2;
         let h = this.ge.run.height/2

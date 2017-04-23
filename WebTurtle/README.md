@@ -80,6 +80,8 @@ random | 数字 | 随机 | random 30 | 产生一个0到30之间的随机数
 海螺 | rp 120 [ stampoval 100 50 rt 3 fd 5 ] rp 60[stampoval 100 50 rt 3 fd 10]
 放射线 | repeat 180 [fd 500 bk 500 rt 2]
 线 | repeat 25 [repeat 15 [fd 100 bk 100 rt 5] fd 100] 
+线框图 | for [x 1 150] [fd :x rt 89]
+线圈 | for [i 0.01 4 0.05] [repeat 180 [fd :i rt 1]]
 
 注:部分例子摘录于 Logo 15-word challenge [参考1]  
 
