@@ -72,7 +72,7 @@ random | 数字 | 随机 | random 30 | 产生一个0到30之间的随机数
 花朵 | rp 6[lt 45 rp 4[rp 9[fd 5 rt 10] rp 9[fd 5 lt 10] rt 90]rt 105]
 矩形纹 | rp 8[fd 30 lt 45 rp 4 [fd 25 rt 90] rt 45 fd 10 lt 45 rp 4 [fd 50 rt 90] rt 45 bk 40 rt 360/8]
 矩形纹 | repeat 8 [repeat 4 [rt 90 fd 100] bk 100 lt 45]
-彩笔示范 | setw20 fd 50 setpc 4 fd 50 setpc 6 fd 50 setpc [20 20 100] fd 50
+彩笔示范 | setw 20 fd 50 setpc 4 fd 50 setpc 6 fd 50 setpc [20 20 100] fd 50
 涂鸦（会卡）| rp 100[rp 100 [ setpc random 16 fd random 200 rt random 360 ] home ]
 原子模型 | rp 4 [ stampoval 100 50 rt 45 ]
 网状环 | rp 60[stampoval 200 100 rt 3 ]
