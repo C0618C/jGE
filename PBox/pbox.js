@@ -1,43 +1,57 @@
 //▓▉⿴¤§♀📦🏢
 
+class Box{
+    constructor(...x){
+        let [shell,l] = [...x];
+        this.box_obj = shell;
+        let box_body = new $tk_path({ styleType: 'fill', style: "white", points: [[-l, -l], [-l, l], [l, l], [l, -l], -1] });
+        shell.add(box_body);
+        
+        shell.Done = function(){
+            box_body.fillStyle = "yellow";
+        }
+        shell.UnDone = function(){
+            box_body.fillStyle = "white";
+        }
+    }
+    
+    get obj (){
+        return this.box_obj;
+    }
+}
+
 class GameMap {
-    constructor(data = []) {
+    constructor(data = [[]]) {
+        this.obj_type = new Set(["box","target","empty","grass","wall"]);
         this.data = data;
         this.showobject = null;
-        this.box = 0;
         this.done = 0;
-        this.target_list = [];
-        this.manpos = [0, 0];
+        this.target_list = new Map();
+        this.wall_list = new Map();
+        this.box_list = new Map();
+        this.grass_list = new Map();
+        this.empty_list = new Map();
+        this.man = { obj: null, pos: [0, 0] };
         this.width = 0;
         this.height = 0;
-    }
-    update() {
-        this.box = 0;
-        this.done = 0;
-        this.data.forEach((r, y) => {
-            r.forEach((c, x) => {
-                switch (c) {
-                    case Symbol.for("man"): this.manpos = [x, y]; break;
-                    case Symbol.for("done"):
-                        this.done++;
-                    case Symbol.for("box"):
-                        this.box++;
-                        break;
-                }
-            });
-        });
+        this.cellWitdh = 0;
     }
 }
 
 class LogicHelper {
-    constructor() {
-        ;
+    constructor(map) {
+        let check_fun = "";
+        for(let o of map.obj_type){
+            check_fun +=`if(map.${o}_list.has(pos.toString()))  return Symbol.for("${o}");`;
+        }
+        this.GetTargetFromPos=new Function("map","pos",`
+            ${check_fun}
+            return null;
+        `);
     }
     move(map, tw, pos) {
-        let moved = false;
-        let cp = pos ? pos : map.manpos.concat();
+        let cp = pos ? pos : map.man.pos.concat();
         let np = cp.concat();
-        let toTarget = false;
         switch (tw) {
             case Symbol.for("Up"):
                 np[1]--;
@@ -52,35 +66,29 @@ class LogicHelper {
                 np[0]++;
                 break;
         }
-        switch (map.data[np[1]][np[0]]) {
-            case Symbol.for("done"):
-            case Symbol.for("box"):
-                if (pos == undefined) moved = this.move(map, tw, np);
-                break;
-            case Symbol.for("target"):
-                toTarget = true;
-            case Symbol.for("grass"):
-                moved = true;
-                break;
-        }
+        let nextTarget = this.GetTargetFromPos(map,np);
+        let rsl = (nextTarget !== Symbol.for("wall") && nextTarget !== Symbol.for("empty"));
+        if(nextTarget == Symbol.for("box")){
+            if(pos == undefined){
+                let {moved,target,new_pos} = this.move(map,tw,np);
 
-        if (moved) {
-            if (toTarget && map.data[cp[1]][cp[0]] == Symbol.for("box")) {
-                map.data[np[1]][np[0]] = Symbol.for("done");
-                map.data[cp[1]][cp[0]] = Symbol.for("grass");
-            } else if (toTarget && map.data[cp[1]][cp[0]] == Symbol.for("done")) {
-                map.data[np[1]][np[0]] = Symbol.for("done");
-                map.data[cp[1]][cp[0]] = Symbol.for("target");
-            } else {
-                map.data[np[1]][np[0]] = map.data[cp[1]][cp[0]];
-                if (map.data[cp[1]][cp[0]] == Symbol.for("done"))
-                    map.data[cp[1]][cp[0]] = Symbol.for("target");
-                else
-                    map.data[cp[1]][cp[0]] = Symbol.for("grass");
+                if(moved && target == Symbol.for("target")){
+                    moved = moved && !map.box_list.has(new_pos.toString());
+                }else if(moved && target != Symbol.for("grass")){
+                    moved = false;
+                }
+                if(moved){
+                    let box = map.box_list.get(np.toString());
+                    map.box_list.delete(np.toString());
+                    map.box_list.set(new_pos.toString(),box);
+                }
+                rsl = rsl && moved;
+            }else{
+                rsl = false;
             }
         }
-
-        return moved;
+        if(rsl) map.man.pos = np;
+        return {moved:rsl,target:nextTarget,new_pos:np};
     }
 }
 
@@ -88,7 +96,7 @@ class LogicHelper {
 class GameHelper {
     constructor(jGE) {
         this._jGE = jGE;
-        this.logicHandler = new LogicHelper();
+        this.logicHandler = new LogicHelper(new GameMap());
         this.symbolmapping = new Map();
         this.symbolmapping.set("▉", Symbol.for("wall"));
         this.symbolmapping.set("▓", Symbol.for("empty"));
@@ -110,10 +118,9 @@ class GameHelper {
         this.curMap = null;
 
         this.curLevel = 1;
-        this.cellWitdh = 0;
 
         this.InitMap();
-        this._jGE.one("jGE.Scene.Logo.End", () => this.StartLv(1));
+        this._jGE.one("jGE.Scene.Logo.End", () => this.StartLv(5));
     }
 
     InitMap() {
@@ -126,94 +133,167 @@ class GameHelper {
 ▉▉▉▉▉▉▉⿴⿴▉▓|
 ▓▓▓▓▓▓▉▉▉▉▓|
         `);
+        this.level.set(2, `
+▓▉▉▉▉▉▉▉▓▓|
+▓▉⿴⿴⿴⿴⿴▉▉▉|
+▉▉□▉▉▉⿴⿴⿴▉|
+▉♀⿴⿴□⿴⿴□⿴▉|
+▉⿴☉☉▉⿴□⿴▉▉|
+▉▉☉☉▉⿴⿴⿴▉▓|
+▓▉▉▉▉▉▉▉▉▓|
+        `);
+        this.level.set(3, `
+▓▓▉▉▉▉▓▓▓|
+▉▉▉⿴⿴▉▉▉▉|
+▉⿴⿴⿴⿴⿴□⿴▉|
+▉⿴▉⿴⿴▉□⿴▉|
+▉⿴☉⿴☉▉♀⿴▉|
+▉▉▉▉▉▉▉▉▉|
+        `);
+        this.level.set(4, `
+▓▉▉▉▉▉▉▉▉▉▓|
+▓▉⿴⿴▉▉⿴⿴⿴▉▓|
+▓▉⿴⿴⿴□⿴⿴⿴▉▓|
+▓▉□⿴▉▉▉⿴□▉▓|
+▓▉⿴▉☉☉☉▉⿴▉▓|
+▉▉⿴▉☉☉☉▉⿴▉▉|
+▉⿴□⿴⿴□⿴⿴□⿴▉|
+▉⿴⿴⿴⿴⿴▉⿴♀⿴▉|
+▉▉▉▉▉▉▉▉▉▉▉|
+        `);
+        this.level.set(5, `
+▉▉▉▉▉▉▉▓▓|
+▉⿴⿴⿴⿴⿴▉▓▓|
+▉⿴□□□▉▉▓▓|
+▉⿴⿴▉☉☉▉▉▉|
+▉▉⿴⿴☉☉□⿴▉|
+▓▉⿴♀⿴⿴⿴⿴▉|
+▓▉▉▉▉▉▉▉▉|
+        `);
+        
+        
+        let draw_model_fun = "";
+        for(let o of (new GameMap()).obj_type){
+            draw_model_fun +=`
+            for (let l of this.curMap.${o}_list.keys()) {
+                let so = this.pens.get(Symbol.for("${o}")).bind(this)(l.split(","));
+                mapObj.add(so);
+                this.curMap.${o}_list.set(l, so);
+            };`;
+        }
+        this.Draw = new Function(`
+            let mapObj = new ShowObj(100, 100);//TODO: 计算中心点放到GameMap处理
+
+            ${draw_model_fun}
+            this.curMap.man.obj = this.__draw_man(this.curMap.man.pos);
+            mapObj.add(this.curMap.man.obj);
+
+            this.curMap.showobject = mapObj;
+            this._jGE.add(mapObj);
+        `);
     }
 
     StartLv(lv) {
-        this.MakeAMap(lv);
+        if (this.curMap) this.curMap.showobject.isDel = true;
+        this.curMap = this.ReadMap(this.level.get(lv));
         this.Draw();
     }
 
 
     ReadMap(mapStr) {
         let mapObj = new GameMap();
-        let map = [[]];
-        let r = 0;
-        mapStr.split(/\||\n/).forEach((row, i) => {
+        let y = 0;
+        mapStr.split(/\||\n/).forEach(row => {
             if (/^\s*$/.test(row)) return;
-            row.match(/.{1}/g).forEach((cell, j) => {
+            row.match(/.{1}/g).forEach((cell, x) => {
                 if (/^\s*$/.test(cell)) return;
                 let obj = this.symbolmapping.get(cell);
-                map[r].push(obj);
+                mapObj.data[y].push(obj);
                 switch (obj) {
-                    case Symbol.for("man"): mapObj.manpos = [i, j]; break;
-                    case Symbol.for("box"): mapObj.box++; break;
-                    case Symbol.for("target"): mapObj.target_list.push([i, j]); break;
-                }
+                    case Symbol.for("man"):
+                        mapObj.man.pos = [x, y];
+                        break;
+                    case Symbol.for("box"):
+                        mapObj.box_list.set([x, y].toString(), null);
+                    case Symbol.for("grass"):
+                        mapObj.grass_list.set([x, y].toString(), null);
+                        break;
+                    case Symbol.for("target"):
+                        mapObj.target_list.set([x, y].toString(), null);
+                        break;
+                    case Symbol.for("wall"):
+                        mapObj.wall_list.set([x, y].toString(), null);
+                        break;
+                    case Symbol.for("empty"):
+                        mapObj.empty_list.set([x, y].toString(), null);
+                        break;
+                };
             });
-            r++;
-            map[r] = [];
+            mapObj.data[++y] = [];
         });
-        map.pop();
-        mapObj.data = map;
-        if(mapObj.target_list.length != mapObj.box){
-            console.error("游戏配置出错，箱子与目标数量不相等。请检查地图设置。")
+        mapObj.grass_list.set(mapObj.man.pos.toString(),null);
+        mapObj.data.pop();
+        if (mapObj.target_list.size != mapObj.box_list.size) {
+            console.error("游戏配置出错，箱子与目标数量不相等。请检查地图设置。");
         }
+
+        mapObj.width = Math.max(...mapObj.data.map(i => i.length));
+        mapObj.height = mapObj.data.length;
+        mapObj.cellWitdh = Math.min(this._jGE.run.width / mapObj.width, this._jGE.run.height / mapObj.height) / 2 >> 0;
+
         return mapObj;
     }
 
-    MakeAMap(lv) {
-        let map = new GameMap(this.ReadMap(this.level.get(lv)));
-
-        map.width = Math.max(...map.data.map(i => i.length));
-        map.height = map.data.length;
-        this.cellWitdh = Math.min(this._jGE.run.width / map.width, this._jGE.run.height / map.height) / 2 >> 0;
-        this.curMap = map;
-        this.curMap.update();
+    __draw_cell(...pos) {
+        return new ShowObj(...this.GetLocalPos(...pos));
     }
-
-    Draw() {
-        let mapObj = new ShowObj(100, 100);
-        this.curMap.data.forEach((r, i) => {
-            r.forEach((c, j) => {
-                mapObj.add(this.pens.get(c).bind(this)(j, i));
-            });
-        });
-        this.curMap.showobject = mapObj;
-        this._jGE.add(mapObj);
+    __draw_wall([i, j]) {
+        let l = this.curMap.cellWitdh / 2 >> 0;
+        return this.__draw_cell([i, j]).add(new $tk_path({ styleType: 'both', style: { fillStyle: "gray", strokeStylest: "#ddd 1" }, points: [[-l, -l], [-l, l], [l, l], [l, -l], -1] }));
     }
-
-    __draw_cell(i, j) {
-        // let l = this.cellWitdh/2>>0;
-        // let cell = new ShowObj(i * this.cellWitdh, j * this.cellWitdh);
-        // return cell.add(new $tk_path({points:[[-l,-l],[-l,l],[l,l],[l,-l],-1]}));
-        return new ShowObj(i * this.cellWitdh, j * this.cellWitdh);
+    __draw_box([i, j]) {
+        let box=new Box(this.__draw_cell([i, j]),(this.curMap.cellWitdh / 2 >> 0) - 5);
+        return box.obj;
     }
-    __draw_wall(i, j) {
-        let l = this.cellWitdh / 2 >> 0;
-        return this.__draw_cell(i, j).add(new $tk_path({ styleType: 'both', style: { fillStyle: "gray", strokeStylest: "#ddd 1" }, points: [[-l, -l], [-l, l], [l, l], [l, -l], -1] }));
-    }
-    __draw_box(i, j) {
-        let l = (this.cellWitdh / 2 >> 0) - 5;
-        return this.__draw_cell(i, j).add(new $tk_path({ styleType: 'fill', style: "white", points: [[-l, -l], [-l, l], [l, l], [l, -l], -1] }));
-    }
-    __draw_empty(i, j) { return this.__draw_cell(i, j); }
-    __draw_grass(i, j) { return this.__draw_cell(i, j).add(new $tk_font({ text: " " })); }
-    __draw_man(i, j) { return this.__draw_cell(i, j).add(new $tk_font({ text: "🐙", font: `${(this.cellWitdh * 0.8) >> 0}px 微软雅黑` })); }
-    __draw_target(i, j) { return this.__draw_cell(i, j).add(new $tk_ellipse({ r: this.cellWitdh / 3 >> 0 })); }
-    __draw_done(i, j) {
-        let l = (this.cellWitdh / 2 >> 0) - 5;
-        return this.__draw_cell(i, j).add(new $tk_path({ styleType: 'fill', style: "green", points: [[-l, -l], [-l, l], [l, l], [l, -l], -1] }));
+    __draw_empty([i, j]) { return this.__draw_cell([i, j]); }
+    __draw_grass([i, j]) { return this.__draw_cell([i, j]).add(new $tk_font({ text: "×" })); }
+    __draw_man([i, j]) { return this.__draw_cell([i, j]).add(new $tk_font({ text: "🐙", font: `${(this.curMap.cellWitdh * 0.8) >> 0}px 微软雅黑` })); }
+    __draw_target([i, j]) { return this.__draw_cell([i, j]).add(new $tk_ellipse({ r: this.curMap.cellWitdh / 3 >> 0 })); }
+    __draw_done([i, j]) {
+        let l = (this.curMap.cellWitdh / 2 >> 0) - 5;
+        return this.__draw_cell([i, j]).add(new $tk_path({ styleType: 'fill', style: "green", points: [[-l, -l], [-l, l], [l, l], [l, -l], -1] }));
     }
 
     Move(tw) {
-        let rsl = this.logicHandler.move(this.curMap, tw);
-        if (rsl) {
-            this.curMap.showobject.isDel = true;
-            this.Draw();
-            this.curMap.update();
+        if (this.logicHandler.move(this.curMap, tw).moved){
+            let {man:m,box_list:b_l,done,target_list:t_l} = this.curMap;
+            m.obj.Copy(new Vector2D(...this.GetLocalPos(m.pos)));
+            
+            b_l.forEach((b,k)=>{
+                b.Copy(new Vector2D(...this.GetLocalPos(k.split(","))));
+                
+                if(t_l.has(k)){
+                    done++;
+                    b.Done();
+                }else{
+                    b.UnDone();
+                }
+                
+            });
+            
+            if(done == t_l.size) console.log("Job done,Thx!");
         }
     }
-
+    
+    GetLocalPos(...x){
+        let i,j;
+        if(Array.isArray(...x)){
+            [[i,j]]=[...x];
+        }else{
+            [i,j] = x;
+        }
+        return [i * this.curMap.cellWitdh, j * this.curMap.cellWitdh];
+    }
 }
 
 (function () {
@@ -230,8 +310,6 @@ class GameHelper {
         if (KeyMap.get(event.keyCode) != undefined) {
             game.Move(KeyMap.get(event.keyCode));
         }
-
-        console.log(event.keyCode)
     });
 
     window.g = game;
