@@ -8,7 +8,7 @@
             "type": "node",
             "request": "launch",
             "name": "开启服务器",
-            "program": "${workspaceRoot}\\Test\\run.js",
+            "program": "${workspaceRoot}/Test/run.js",
             "args":["13457","${workspaceRoot}","${file}"]
         },
         // {
