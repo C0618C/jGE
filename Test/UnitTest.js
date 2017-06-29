@@ -1,6 +1,6 @@
 class UT{
     static Auto_Test(x){
-        // this.Test_tk_Path(x);
+        //this.Test_tk_Path2(x);
         // this.Test_tk_Text(x);
         // this.Test_tk_Script(x);
         //this.Test_tk_video(x);
@@ -10,6 +10,8 @@ class UT{
         //this.Test_tk_Animation(x);
 
         //this.Test_of_001(x);
+
+        this.Test_QB(x);
     }
 
     //单独测试矢量图对象
@@ -25,6 +27,24 @@ class UT{
 
         setInterval(()=>{s1.angle+=0.01;if(s1.angle>=2*π)s1.angle-=2*π;},32);
         console.profileEnd("tk_path_001");
+    }
+    static Test_tk_Path2(x){
+        console.info("开始执行-显示对象-路径部件测试");
+        console.profile("tk_path_002");
+        let p1 = new $tk_path({styleType:'fill',style:'blue',points:[[0,20],[-10,-15],[10,-15]],pos:[60,0]});
+        let p2 = new $tk_path({styleType:'both',style:{fillStyle:"red",strokeStylest:"yellow 2"} ,points:[[0,-20],[-10,15],[10,15],-1],pos:[0,0]});
+        let s1 = new ShowObj(0,0);
+        let s2 = new ShowObj(100,100);
+        s1.add(p1);
+        s2.add(p2);
+        s2.add(s1);      
+        x.add(s2);
+
+        setInterval(()=>{s1.angle+=0.01;if(s1.angle>=2*π)s1.angle-=2*π;},32);
+        setInterval(()=>{
+            s2.AddIn({x:1,y:1});
+            s2.angle+=0.01;if(s2.angle>=2*π)s2.angle-=2*π;},32);
+        console.profileEnd("tk_path_002");
     }
 
     //单独测试-文本对象
@@ -140,6 +160,27 @@ class UT{
         let ef = x.ResManager.ObjectFactory.create("@s1&npc_0001")
         ef.AddIn({x:200,y:300})
         x.add(ef)
+    }
+
+    //贝塞尔曲线
+    static Test_QB(x){
+        console.info("开始执行-二次贝塞尔曲线");
+        let s1 = new ShowObj(0,0);
+        s1.render = (ctx)=>{
+            // ctx.beginPath();
+            // ctx.rect(0,0,600,600);
+            // ctx.clip();
+            // ctx.closePath();
+            
+            ctx.beginPath();
+            ctx.moveTo(0,x.run.height/2);
+            ctx.strokeStyle="red";
+            ctx.quadraticCurveTo(x.run.curMousePoint.x,x.run.curMousePoint.y,x.run.width,x.run.height/2);
+            //ctx.quadraticCurveTo(100,25,0,50);
+            ctx.stroke();
+            ctx.closePath();
+        }
+        x.add(s1);
     }
 }
 
