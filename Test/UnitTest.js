@@ -11,7 +11,7 @@ class UT{
 
         //this.Test_of_001(x);
 
-        this.Test_QB(x);
+        this.Test_Keyboard(x);
     }
 
     //单独测试矢量图对象
@@ -181,6 +181,13 @@ class UT{
             ctx.closePath();
         }
         x.add(s1);
+    }
+
+    //虚拟键盘 虚拟按钮测试
+    static Test_Keyboard(x){
+        console.log("键盘测试开始");
+
+        x.add(new Keyboard(x));
     }
 }
 

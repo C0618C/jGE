@@ -305,12 +305,12 @@ class GameHelper {
     let vp = document.getElementById("view_port");
     vp.appendChild(x.GetDom());
 
-    let KeyMap = new Map([[38, Symbol.for("Up")], [39, Symbol.for("Right")], [40, Symbol.for("Down")], [37, Symbol.for("Left")]]);
-    document.body.addEventListener("keyup", function (event) {
-        if (KeyMap.get(event.keyCode) != undefined) {
-            game.Move(KeyMap.get(event.keyCode));
-        }
-    });
+    // let KeyMap = new Map([[38, Symbol.for("Up")], [39, Symbol.for("Right")], [40, Symbol.for("Down")], [37, Symbol.for("Left")]]);
+    // document.body.addEventListener("keyup", function (event) {
+    //     if (KeyMap.get(event.keyCode) != undefined) {
+    //         game.Move(KeyMap.get(event.keyCode));
+    //     }
+    // });
 
     window.g = game;
 

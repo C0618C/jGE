@@ -10,6 +10,7 @@
     <script src="lib/ObjectFactory.js"></script>
     <script src="lib/ResManager.js"></script>
     <script src="lib/SceneManager.js"></script>
+    <script src="lib/Keyboard.js"></script>
     <script src="lib/jGE.config.js"></script>
     <script src="lib/tool.js"></script>
     <script src="lib/MObj.js"></script>
@@ -26,10 +27,7 @@
     (function(){
         if(typeof Symbol == typeof undefined) window.location.href = "jGE_ES5.html";
 
-        let x = new jGE({keyHandler:function (e) {
-            this.temp.keyCode = e.keyCode;
-            if(e.keyCode=="13"){this.Pause();}
-        },width:document.documentElement.clientWidth
+        let x = new jGE({width:document.documentElement.clientWidth
         ,height:document.documentElement.clientHeight});
         document.getElementById("view_port").appendChild(x.GetDom());
         window.t  = x;
