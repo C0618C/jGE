@@ -186,8 +186,22 @@ class UT{
     //虚拟键盘 虚拟按钮测试
     static Test_Keyboard(x){
         console.log("键盘测试开始");
+        let pu = new $tk_path({styleType:'both',style:{fillStyle:"green",strokeStylest:"yellow 2"} ,points:[[0,-20],[-10,15],[10,15],-1],pos:[0,0]});
+        let pd = new $tk_path({styleType:'both',style:{fillStyle:"red",strokeStylest:"blue 2"} ,points:[[0,-20],[-10,15],[10,15],-1],pos:[0,0]});
 
-        x.add(new Keyboard(x));
+
+
+        let vk = new Key({
+            code:"KeyD",
+            upObjs:[pu],downObjs:[pd],x:300,y:300
+        });
+
+        let kb = new Keyboard(x);
+        kb.add(vk);
+
+        x.add(kb);
+
+        window.kk = vk;
     }
 }
 
