@@ -115,12 +115,15 @@ class GameHelper {
 
         this.level = new Map();
 
+        this.keyboard = null;
         this.curMap = null;
 
         this.curLevel = 1;
 
         this.InitMap();
-        this._jGE.one("jGE.Scene.Logo.End", () => this.StartLv(5));
+        this.InitKeyboard();
+       
+        this._jGE.one("jGE.Scene.Logo.End", () => this.Start());
     }
 
     InitMap() {
@@ -182,7 +185,7 @@ class GameHelper {
             };`;
         }
         this.Draw = new Function(`
-            let mapObj = new ShowObj(100, 100);//TODO: 计算中心点放到GameMap处理
+            let mapObj = new ShowObj({x:100, y:100});//TODO: 计算中心点放到GameMap处理
 
             ${draw_model_fun}
             this.curMap.man.obj = this.__draw_man(this.curMap.man.pos);
@@ -197,6 +200,12 @@ class GameHelper {
         if (this.curMap) this.curMap.showobject.isDel = true;
         this.curMap = this.ReadMap(this.level.get(lv));
         this.Draw();
+    }
+
+    Start(){
+        this.StartLv(5);
+        this.keyboard.VirtualKeyboard.visible = true;
+        this.keyboard.isEnable = true;
     }
 
 
@@ -245,7 +254,7 @@ class GameHelper {
     }
 
     __draw_cell(...pos) {
-        return new ShowObj(...this.GetLocalPos(...pos));
+        return new ShowObj(this.GetLocalPos(...pos));
     }
     __draw_wall([i, j]) {
         let l = this.curMap.cellWitdh / 2 >> 0;
@@ -267,10 +276,10 @@ class GameHelper {
     Move(tw) {
         if (this.logicHandler.move(this.curMap, tw).moved){
             let {man:m,box_list:b_l,done,target_list:t_l} = this.curMap;
-            m.obj.Copy(new Vector2D(...this.GetLocalPos(m.pos)));
+            m.obj.Copy(new Vector2D(this.GetLocalPos(m.pos)));
             
             b_l.forEach((b,k)=>{
-                b.Copy(new Vector2D(...this.GetLocalPos(k.split(","))));
+                b.Copy(new Vector2D(this.GetLocalPos(k.split(","))));
                 
                 if(t_l.has(k)){
                     done++;
@@ -292,7 +301,48 @@ class GameHelper {
         }else{
             [i,j] = x;
         }
-        return [i * this.curMap.cellWitdh, j * this.curMap.cellWitdh];
+        return {x:i * this.curMap.cellWitdh, y:j * this.curMap.cellWitdh};
+    }
+
+    InitKeyboard(){
+        let pu = new $tk_path({styleType:'both',style:{fillStyle:"green",strokeStylest:"yellow 2"} ,points:[[0,-30],[-20,25],[20,25],-1],pos:[0,0]});
+        let pd = new $tk_path({styleType:'both',style:{fillStyle:"red",strokeStylest:"white 2"} ,points:[[0,-30],[-20,25],[20,25],-1],pos:[0,0]});
+        let po = new $tk_path({styleType:'both',style:{fillStyle:"yellow",strokeStylest:"blue 2"} ,points:[[0,-30],[-20,25],[20,25],-1],pos:[0,0]});
+
+        let kb = new Keyboard(this._jGE);
+        
+        kb.add(new Key({
+            code:"ArrowUp",
+            upObjs:[pu],downObjs:[pd],hoverObj:[po],y:-50
+        }));
+        kb.add(new Key({
+            code:"ArrowLeft",
+            upObjs:[pu.clone()],downObjs:[pd.clone()],hoverObj:[po.clone()]
+            ,x:-50,angle:-0.5*π
+        }));
+        kb.add(new Key({
+            code:"ArrowRight",
+            upObjs:[pu.clone()],downObjs:[pd.clone()],hoverObj:[po.clone()]
+            ,x:50,angle:0.5*π
+        }));
+        kb.add(new Key({
+            code:"ArrowDown",
+            upObjs:[pu.clone()],downObjs:[pd.clone()],hoverObj:[po.clone()]
+            ,y:50,angle:π
+        }));
+
+        let KeyMap = new Map([["ArrowUp", Symbol.for("Up")], ["ArrowDown", Symbol.for("Down")], ["ArrowLeft", Symbol.for("Left")], ["ArrowRight", Symbol.for("Right")]]);
+
+        kb.get("ArrowUp").addEventListener("keyup",e=>this.Move(KeyMap.get(e.code)));
+        kb.get("ArrowDown").addEventListener("keyup",e=>this.Move(KeyMap.get(e.code)));
+        kb.get("ArrowLeft").addEventListener("keyup",e=>this.Move(KeyMap.get(e.code)));
+        kb.get("ArrowRight").addEventListener("keyup",e=>this.Move(KeyMap.get(e.code)));
+
+        kb.VirtualKeyboard.AddIn({x:this._jGE.run.width - 200,y:this._jGE.run.height - 200});
+        this._jGE.add(kb);
+        kb.isEnable = false;
+        kb.VirtualKeyboard.visible = false;
+        this.keyboard = kb;
     }
 }
 
@@ -304,13 +354,6 @@ class GameHelper {
 
     let vp = document.getElementById("view_port");
     vp.appendChild(x.GetDom());
-
-    // let KeyMap = new Map([[38, Symbol.for("Up")], [39, Symbol.for("Right")], [40, Symbol.for("Down")], [37, Symbol.for("Left")]]);
-    // document.body.addEventListener("keyup", function (event) {
-    //     if (KeyMap.get(event.keyCode) != undefined) {
-    //         game.Move(KeyMap.get(event.keyCode));
-    //     }
-    // });
 
     window.g = game;
 
