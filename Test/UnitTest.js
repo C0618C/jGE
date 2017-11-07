@@ -11,6 +11,9 @@ class UT{
 
         //this.Test_of_001(x);
 
+        this.Test_Ellipse(x);
+
+        this.Test_QB(x);
         this.Test_Keyboard(x);
     }
 
@@ -20,7 +23,7 @@ class UT{
         console.profile("tk_path_001");
         let p1 = new $tk_path({styleType:'fill',style:'blue',points:[[0,20],[-10,-15],[10,-15]],pos:[30,0]});
         let p2 = new $tk_path({styleType:'both',style:{fillStyle:"red",strokeStylest:"yellow 2"} ,points:[[0,-20],[-10,15],[10,15],-1],pos:[-30,0]});
-        let s1 = new ShowObj(300,500);
+        let s1 = new ShowObj({x:300,y:500});
         s1.add(p1);
         s1.add(p2);
         x.add(s1);
@@ -33,8 +36,8 @@ class UT{
         console.profile("tk_path_002");
         let p1 = new $tk_path({styleType:'fill',style:'blue',points:[[0,20],[-10,-15],[10,-15]],pos:[60,0]});
         let p2 = new $tk_path({styleType:'both',style:{fillStyle:"red",strokeStylest:"yellow 2"} ,points:[[0,-20],[-10,15],[10,15],-1],pos:[0,0]});
-        let s1 = new ShowObj(0,0);
-        let s2 = new ShowObj(100,100);
+        let s1 = new ShowObj();
+        let s2 = new ShowObj({x:100,y:100});
         s1.add(p1);
         s2.add(p2);
         s2.add(s1);      
@@ -53,7 +56,7 @@ class UT{
         console.profile("tk_text_001");
         let f1 = new $tk_font({text:'ABCDEFG',styleType:'stroke',style:'green 3',font:'80px serif',pos:[0,80]});
         let f2 = new $tk_font({text:'HELLOW WORD',style:'orange',font:'50px serif',pos:[0,-80]});
-        let s1 = new ShowObj(500,500);
+        let s1 = new ShowObj({x:500,y:500});
         s1.add(f1);
         s1.add(f2);
         
@@ -73,7 +76,7 @@ class UT{
         //img.src="res/x1.gif"
         img.onload = e => {
             let i1 = new $tk_sprite({img:img,update:function(){this.angle +=0.01;}});
-            let s1 = new ShowObj(500,300);
+            let s1 = new ShowObj({x:500,y:300});
             i1.scale(1.25);
             s1.add(i1);
             x.add(s1);
@@ -112,7 +115,7 @@ class UT{
         setTimeout(f=>{
             //let i1 = new $tk_video({img:v,area:{x:-50,y:-50,width:100,height:100},sarea:{x:100,y:20,width:100,height:100}});
             let i1 = new $tk_video({video:v,update:function(){this.angle+=0.01;}});
-            let s1 = new ShowObj(400,200);
+            let s1 = new ShowObj({x:400,y:200});
             i1.scale(0.75);
             s1.add(i1);
             x.add(s1);
@@ -143,7 +146,7 @@ class UT{
             //let i1 = new $tk_animation({img:img,fps:16,frame:8,farea:{width:img.width/4,height:img.height/4},update:function(){this.angle+=0.01;}});
             //let i1 = new $tk_animation({img:img,fps:4,frame:20,farea:{width:img.width/5,height:img.width/5-11},update:function(){}});
             let i1 = new $tk_animation({img:img,fps:8,frame:8,farea:{width:img.width/4,height:img.height/2},update:function(){}});
-            let s1 = new ShowObj(550,350);
+            let s1 = new ShowObj({x:550,y:350});
             i1.scale(1.25);
             s1.add(i1);
             x.add(s1);
@@ -165,7 +168,7 @@ class UT{
     //贝塞尔曲线
     static Test_QB(x){
         console.info("开始执行-二次贝塞尔曲线");
-        let s1 = new ShowObj(0,0);
+        let s1 = new ShowObj();
         s1.render = (ctx)=>{
             // ctx.beginPath();
             // ctx.rect(0,0,600,600);
@@ -186,23 +189,51 @@ class UT{
     //虚拟键盘 虚拟按钮测试
     static Test_Keyboard(x){
         console.log("键盘测试开始");
-        let pu = new $tk_path({styleType:'both',style:{fillStyle:"green",strokeStylest:"yellow 2"} ,points:[[0,-20],[-10,15],[10,15],-1],pos:[0,0]});
-        let pd = new $tk_path({styleType:'both',style:{fillStyle:"red",strokeStylest:"white 2"} ,points:[[0,-20],[-10,15],[10,15],-1],pos:[0,0]});
-        let po = new $tk_path({styleType:'both',style:{fillStyle:"yellow",strokeStylest:"blue 2"} ,points:[[0,-20],[-10,15],[10,15],-1],pos:[0,0]});
-
-
-
-        let vk = new Key({
-            code:"KeyD",
-            upObjs:[pu],downObjs:[pd],hoverObj:[po],x:300,y:300
-        });
+        let pu = new $tk_path({styleType:'both',style:{fillStyle:"green",strokeStylest:"yellow 2"} ,points:[[0,-30],[-20,25],[20,25],-1],pos:[0,0]});
+        let pd = new $tk_path({styleType:'both',style:{fillStyle:"red",strokeStylest:"white 2"} ,points:[[0,-30],[-20,25],[20,25],-1],pos:[0,0]});
+        let po = new $tk_path({styleType:'both',style:{fillStyle:"yellow",strokeStylest:"blue 2"} ,points:[[0,-30],[-20,25],[20,25],-1],pos:[0,0]});
 
         let kb = new Keyboard(x);
-        kb.add(vk);
+        
+        kb.add(new Key({
+            code:"KeyW",
+            upObjs:[pu],downObjs:[pd],hoverObj:[po],y:-50
+        }));
+        kb.add(new Key({
+            code:"KeyA",
+            upObjs:[pu.clone()],downObjs:[pd.clone()],hoverObj:[po.clone()]
+            ,x:-50,angle:-0.5*π
+        }));
+        kb.add(new Key({
+            code:"KeyD",
+            upObjs:[pu.clone()],downObjs:[pd.clone()],hoverObj:[po.clone()]
+            ,x:50,angle:0.5*π
+        }));
+        kb.add(new Key({
+            code:"KeyS",
+            upObjs:[pu.clone()],downObjs:[pd.clone()],hoverObj:[po.clone()]
+            ,y:50,angle:π
+        }));
+
+        kb.get("KeyS").addEventListener("keypress",e=>console.log(e));
+
+        kb.VirtualKeyboard.AddIn({x:180,y:600});
 
         x.add(kb);
 
-        window.kk = vk;
+        window.kb = kb;
+    }
+
+    //椭圆例子
+    static Test_Ellipse(x){
+        console.info("开始执行-显示对象-路径部件测试");
+        let p1 = new $tk_ellipse({ a:60,b:80 })
+        let s1 = new ShowObj({x:800,y:500});
+        s1.add(p1);
+        x.add(s1);
+        
+
+        window.ss = s1
     }
 }
 
