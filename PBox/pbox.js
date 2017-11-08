@@ -305,30 +305,31 @@ class GameHelper {
     }
 
     InitKeyboard(){
-        let pu = new $tk_path({styleType:'both',style:{fillStyle:"green",strokeStylest:"yellow 2"} ,points:[[0,-30],[-20,25],[20,25],-1],pos:[0,0]});
-        let pd = new $tk_path({styleType:'both',style:{fillStyle:"red",strokeStylest:"white 2"} ,points:[[0,-30],[-20,25],[20,25],-1],pos:[0,0]});
-        let po = new $tk_path({styleType:'both',style:{fillStyle:"yellow",strokeStylest:"blue 2"} ,points:[[0,-30],[-20,25],[20,25],-1],pos:[0,0]});
+        const l = 20;
+        let pu = new $tk_path({styleType:'both',style:{fillStyle:"green",strokeStylest:"yellow 2"} ,points:[[0,-3*l],[-2*l,2.5*l],[2*l,2.5*l],-1],pos:[0,0]});
+        let pd = new $tk_path({styleType:'both',style:{fillStyle:"red",strokeStylest:"white 2"} ,points:[[0,-3*l],[-2*l,2.5*l],[2*l,2.5*l],-1],pos:[0,0]});
+        let po = new $tk_path({styleType:'both',style:{fillStyle:"yellow",strokeStylest:"blue 2"} ,points:[[0,-3*l],[-2*l,2.5*l],[2*l,2.5*l],-1],pos:[0,0]});
 
         let kb = new Keyboard(this._jGE);
         
         kb.add(new Key({
             code:"ArrowUp",
-            upObjs:[pu],downObjs:[pd],hoverObj:[po],y:-50
+            upObjs:[pu],downObjs:[pd],hoverObj:[po],y:-5*l
         }));
         kb.add(new Key({
             code:"ArrowLeft",
             upObjs:[pu.clone()],downObjs:[pd.clone()],hoverObj:[po.clone()]
-            ,x:-50,angle:-0.5*π
+            ,x:-5*l,angle:-0.5*π
         }));
         kb.add(new Key({
             code:"ArrowRight",
             upObjs:[pu.clone()],downObjs:[pd.clone()],hoverObj:[po.clone()]
-            ,x:50,angle:0.5*π
+            ,x:5*l,angle:0.5*π
         }));
         kb.add(new Key({
             code:"ArrowDown",
             upObjs:[pu.clone()],downObjs:[pd.clone()],hoverObj:[po.clone()]
-            ,y:50,angle:π
+            ,y:5*l,angle:π
         }));
 
         let KeyMap = new Map([["ArrowUp", Symbol.for("Up")], ["ArrowDown", Symbol.for("Down")], ["ArrowLeft", Symbol.for("Left")], ["ArrowRight", Symbol.for("Right")]]);
