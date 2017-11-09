@@ -319,12 +319,10 @@ class GameHelper {
         kb.add(new Key({
             code:"ArrowLeft",
             upObjs:[pu.clone()],downObjs:[pd.clone()],hoverObj:[po.clone()]
-            ,x:-5*l,angle:-0.5*π
         }));
         kb.add(new Key({
             code:"ArrowRight",
             upObjs:[pu.clone()],downObjs:[pd.clone()],hoverObj:[po.clone()]
-            ,x:5*l,angle:0.5*π
         }));
         kb.add(new Key({
             code:"ArrowDown",
@@ -334,10 +332,6 @@ class GameHelper {
 
         let KeyMap = new Map([["ArrowUp", Symbol.for("Up")], ["ArrowDown", Symbol.for("Down")], ["ArrowLeft", Symbol.for("Left")], ["ArrowRight", Symbol.for("Right")]]);
 
-        kb.get("ArrowUp").addEventListener("keyup",e=>this.Move(KeyMap.get(e.code)));
-        kb.get("ArrowDown").addEventListener("keyup",e=>this.Move(KeyMap.get(e.code)));
-        kb.get("ArrowLeft").addEventListener("keyup",e=>this.Move(KeyMap.get(e.code)));
-        kb.get("ArrowRight").addEventListener("keyup",e=>this.Move(KeyMap.get(e.code)));
 
         kb.VirtualKeyboard.AddIn({x:this._jGE.run.width - 200,y:this._jGE.run.height - 200});
         this._jGE.add(kb);
