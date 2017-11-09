@@ -1,5 +1,3 @@
-'use strict';
-
 const π = Math.PI;
 const π2 = 2*π;
 const π_hf = 0.5*π; //½π
@@ -18,8 +16,8 @@ function GetEventPosition(event) {
     if (event.type.indexOf("touch") != -1) {
         try {
             var touch = event.changedTouches[0];
-            y = touch.pageY;
-            x = touch.pageX;
+            y = Math.floor( touch.pageY);
+            x = Math.floor(touch.pageX);
         } catch (e) {
             console.error(event, e);
         }
@@ -1460,7 +1458,7 @@ class Key  extends ShowObj{
     }
 
 }
-'use strict';
+
 
 //用于获取基本配置
 //TODO: 合并为默认参数 取消本文件

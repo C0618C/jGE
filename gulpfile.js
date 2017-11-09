@@ -35,9 +35,9 @@ gulp.task('jGE-Full', function(cb) {
 
 gulp.task('jGE-min', ['clean'], function() {
     return gulp.src(model)
-        .pipe(minify({}))
-        .pipe(concat('jGE.min.js'))
-      .pipe(gulp.dest('./release/'));
+                        .pipe(concat('jGE.min.js'))
+                        .pipe(minify({}))
+                        .pipe(gulp.dest('./release/'));
   });
 
 gulp.task('default', ['clean','jGE-min','jGE-Full']);
