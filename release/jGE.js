@@ -1,4 +1,3 @@
-'use strict';
 
 const π = Math.PI;
 const π2 = 2*π;
@@ -661,7 +660,8 @@ class jGE extends ShowObj{
         //键盘
         this.keyboards = new Set();
         this.__bind_helper(document.body,["keypress","keydown","keyup"],(e)=>{this.keyboards.forEach(kb=>{ kb.keyHandle(e);})});
-        this.__bind_helper(setting.dom,["click","mousemove","mousedown","mouseup","touchstart","touchmove","touchend"],(e)=>{
+        this.__bind_helper(setting.dom,["click","touchstart" in setting.dom?"touchstart":"mousedown",
+            "touchmove" in setting.dom?"touchmove":"mousemove","touchend" in setting.dom?"touchend":"mouseup"],(e)=>{
             run.curMousePoint = GetEventPosition(e);
             this.keyboards.forEach(kb=>{ kb.pointHandle(e,run.curMousePoint);})
         });
@@ -1460,7 +1460,6 @@ class Key  extends ShowObj{
     }
 
 }
-'use strict';
 
 //用于获取基本配置
 //TODO: 合并为默认参数 取消本文件
