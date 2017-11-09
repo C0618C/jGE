@@ -1,4 +1,3 @@
-
 const π = Math.PI;
 const π2 = 2*π;
 const π_hf = 0.5*π; //½π
@@ -17,8 +16,8 @@ function GetEventPosition(event) {
     if (event.type.indexOf("touch") != -1) {
         try {
             var touch = event.changedTouches[0];
-            y = touch.pageY;
-            x = touch.pageX;
+            y = Math.floor( touch.pageY);
+            x = Math.floor(touch.pageX);
         } catch (e) {
             console.error(event, e);
         }
@@ -1326,7 +1325,6 @@ class Keyboard extends Manager{
         if(!this.isEnable) return;
 
         let e = {x:pos.x,y:pos.y,style:"point"};
-        this._jGE.run.debug.log(event.type)
         switch(event.type){
             case "mousemove": e.type = "over"; break;
             case "mousedown": e.type = "keydown"; break;
