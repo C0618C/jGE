@@ -16,6 +16,7 @@ let model = [
     ,"./lib/SceneManager.js"
     ,"./lib/Keyboard.js"
     ,"./lib/jGE.config.js"
+    //,"./lib/jGE.Debug.js"
 ];
 
 console.log(`准备生成 jGE，包含的模块有：\n${model.join('').replace(/\.\/lib\//g,'').replace(/\.js/g,'\n')}`)
