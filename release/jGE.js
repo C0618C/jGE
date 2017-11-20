@@ -150,6 +150,8 @@ ontimeout=e=>{},onprogress=e=>{},onuprogress=e=>{}}){
         xhr.send(data);
     });
 }
+
+
 class Vector2D {
     constructor(...args) {
         //args.length == 1?({x:this.x = 0,y:this.y=0} = args[0]):([this.x = 0,this.y=0]=args);
@@ -709,28 +711,6 @@ class jGE extends ShowObj{
             run.fps_rc_time++;
             _jGE.update(ts);
         });
-
-        // if(run.iDBug&&run.debug.fixSpeed !=0){
-        //     setTimeout(function () {
-        //         let ts = 17;//new Date() - run.timemark;
-        //         run.fps = Math.round((run.rendertime - run.curfram) * 100000 / ts) / 100;
-        //         run.curfram = run.rendertime;
-        //         //_jGE.update(ts);
-        //         _jGE.render();
-        //     },run.debug.fixSpeed);
-        // }else {
-        //     requestAnimationFrame(function () {
-        //         if (run.iDBug && run.debug.profile) console.profile("update");
-        //         let ts = new Date() - run.timemark;
-        //         run.fps = Math.round((run.rendertime - run.curfram) * 100000 / ts) / 100;
-        //         run.curfram = run.rendertime;
-
-        //         run.aFps+=run.fps;
-        //         run.fps_rc_time++;
-        //         _jGE.update(ts);
-        //         if (run.iDBug && run.debug.profile) console.profileEnd("update");
-        //     });
-        // }
     };
     
     //渲染
@@ -757,19 +737,6 @@ class jGE extends ShowObj{
         requestAnimationFrame(function () {
             _jGE.render();
         });
-        // const _jGE = this;
-        // if(run.iDBug&&run.debug.fixSpeed !=0){
-        //     setTimeout(function () {
-        //         //_jGE.render();
-        //         _jGE.update(17);
-        //     },run.debug.fixSpeed);
-        // }else {
-        //     requestAnimationFrame(function () {
-        //         if (run.iDBug && run.debug.profile) console.profile("render");
-        //         _jGE.render();
-        //         if (run.iDBug && run.debug.profile) console.profileEnd("render");
-        //     });
-        // }
     }
 
     _add(obj){
@@ -824,7 +791,7 @@ class jGE extends ShowObj{
     //构造函数
     constructor(){
         super();
-        this.version = [3,1,4];//大版本不兼容，中版本加功能，小版本修bug
+        this.version = [3,2,0];//大版本不兼容，中版本加功能，小版本修bug
         this.setting = {};
         const run = this.run = {};//配置了运行时的变量、参数等
         this.temp = {};
