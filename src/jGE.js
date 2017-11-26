@@ -156,6 +156,11 @@ class jGE extends ShowObj{
         return rsl;
     };
 
+    //提供鼠标事件绑定接口
+    OnMouse(action,handler){
+        this.setting.dom.addEventListener(action,handler);
+    }
+
     set backgroundColor(color){this.run.bgColor = color;}
 
     __bind_helper(dom,action,handler){
