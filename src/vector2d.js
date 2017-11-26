@@ -4,8 +4,40 @@ class Vector2D {
         //NOTE:Fixed for Edge
         let a,b;
         args.length == 1?({x:a = 0,y:b=0} = args[0]):([a = 0,b=0]=args);
+
+        this.speed = 0;
+        this.va = 0;        //speed angle
+        this._x = 0;
+        this._y = 0;
+
         this.x = a;
         this.y = b;
+    }
+    get x(){
+        return this._x;
+    }
+    get y(){
+        return this._y;
+    }
+
+    set x(x){
+        this._x = x;
+        this.speed = this.Length();
+        this.va = Math.atan2(this.y,this.x);
+    }
+
+    set y(y){
+        this._y = y;
+        this.speed = this.Length();
+        this.va = Math.atan2(this.y,this.x);
+    }
+
+    //用速度，方向的角度描述向量
+    Velocity(speed,angle){
+        this._x = speed * Math.cos(angle);
+        this._y = speed * Math.sin(angle);
+        this.speed = speed;
+        this.va = angle%π2;
     }
 
     Copy(v2){this.x=v2.x,this.y=v2.y;}
@@ -47,7 +79,7 @@ class Vector2D {
         return Math.sqrt(this.DistanceSq(v2));
     };
     DistanceSq(v2) {
-        //TODO:未完成
+        return Math.pow(this.x - v2.x,2)+Math.pow(this.y - v2.y,2);
     };
 
     //返回v的相反矢量

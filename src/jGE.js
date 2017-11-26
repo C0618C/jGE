@@ -157,8 +157,8 @@ class jGE extends ShowObj{
     };
 
     //提供鼠标事件绑定接口
-    OnMouse(action,handler){
-        this.setting.dom.addEventListener(action,handler);
+    OnMouse(action,handler,target){
+        this.setting.dom.addEventListener(action,target?handler.bind(target):handler);
     }
 
     set backgroundColor(color){this.run.bgColor = color;}
@@ -170,7 +170,7 @@ class jGE extends ShowObj{
     //构造函数
     constructor(){
         super();
-        this.version = [3,2,0];//大版本不兼容，中版本加功能，小版本修bug
+        this.version = [3,3,0];//大版本不兼容，中版本加功能，小版本修bug
         this.setting = {};
         const run = this.run = {};//配置了运行时的变量、参数等
         this.temp = {};

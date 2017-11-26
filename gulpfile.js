@@ -9,20 +9,20 @@ var minify = composer(uglifyes, console);
 // let isHightAvailability = false;
 
 let model = [
-     "./lib/tool.js"
-    , "./lib/vector2d.js"
-    , "./lib/ShowObj.js"
-    , "./lib/jGE.js"
-    , "./lib/EventManager.js"
-    , "./lib/ObjectFactory.js"
-    , "./lib/ResManager.js"
-    , "./lib/SceneManager.js"
-    , "./lib/Keyboard.js"
-    , "./lib/jGE.config.js"
+     "./src/tool.js"
+    , "./src/vector2d.js"
+    , "./src/ShowObj.js"
+    , "./src/jGE.js"
+    , "./src/EventManager.js"
+    , "./src/ObjectFactory.js"
+    , "./src/ResManager.js"
+    , "./src/SceneManager.js"
+    , "./src/Keyboard.js"
+    , "./src/jGE.config.js"
     //,"./lib/jGE.Debug.js"
 ];
 
-console.log(`准备生成 jGE，包含的模块有：\n${model.join('').replace(/\.\/lib\//g, '').replace(/\.js/g, '\n')}`)
+console.log(`准备生成 jGE，包含的模块有：\n${model.join('').replace(/\.\/src\//g, '').replace(/\.js/g, '\n')}`)
 
 gulp.task('clean', function () {
     console.log("....清理输出文件....")
@@ -44,16 +44,16 @@ gulp.task('jGE-min', ['jGE-Full'], function () {
         .pipe(gulp.dest('./release/'));
 });
 
-// gulp.task('AvailabilityCheck', ['jGE-min'], function () {
-//     if(isHightAvailability){
-//         gulp.src(["./lib/Availability.js","./release/jGE.js"])
-//         .pipe(concat('jGE.js'))
-//         .pipe(gulp.dest('./release/'));
+gulp.task('AvailabilityCheck', ['jGE-min'], function () {
+    if(isHightAvailability){
+        gulp.src(["./src/Availability.js","./release/jGE.js"])
+        .pipe(concat('jGE.js'))
+        .pipe(gulp.dest('./release/'));
 
-//         return gulp.src(["./lib/Availability.js","./release/jGE.min.js"])
-//         .pipe(concat('jGE.min.js'))
-//         .pipe(gulp.dest('./release/'));
-//     }
-// });
+        return gulp.src(["./src/Availability.js","./release/jGE.min.js"])
+        .pipe(concat('jGE.min.js'))
+        .pipe(gulp.dest('./release/'));
+    }
+});
 
 gulp.task('default', ['clean', 'jGE-Full', 'jGE-min'/*,'AvailabilityCheck'*/]);

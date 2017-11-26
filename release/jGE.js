@@ -150,16 +150,46 @@ ontimeout=e=>{},onprogress=e=>{},onuprogress=e=>{}}){
         xhr.send(data);
     });
 }
-
-
 class Vector2D {
     constructor(...args) {
         //args.length == 1?({x:this.x = 0,y:this.y=0} = args[0]):([this.x = 0,this.y=0]=args);
         //NOTE:Fixed for Edge
         let a,b;
         args.length == 1?({x:a = 0,y:b=0} = args[0]):([a = 0,b=0]=args);
+
+        this.speed = 0;
+        this.va = 0;        //speed angle
+        this._x = 0;
+        this._y = 0;
+
         this.x = a;
         this.y = b;
+    }
+    get x(){
+        return this._x;
+    }
+    get y(){
+        return this._y;
+    }
+
+    set x(x){
+        this._x = x;
+        this.speed = this.Length();
+        this.va = Math.atan2(this.y,this.x);
+    }
+
+    set y(y){
+        this._y = y;
+        this.speed = this.Length();
+        this.va = Math.atan2(this.y,this.x);
+    }
+
+    //用速度，方向的角度描述向量
+    Velocity(speed,angle){
+        this._x = speed * Math.cos(angle);
+        this._y = speed * Math.sin(angle);
+        this.speed = speed;
+        this.va = angle%π2;
     }
 
     Copy(v2){this.x=v2.x,this.y=v2.y;}
@@ -201,7 +231,7 @@ class Vector2D {
         return Math.sqrt(this.DistanceSq(v2));
     };
     DistanceSq(v2) {
-        //TODO:未完成
+        return Math.pow(this.x - v2.x,2)+Math.pow(this.y - v2.y,2);
     };
 
     //返回v的相反矢量
@@ -782,6 +812,11 @@ class jGE extends ShowObj{
         return rsl;
     };
 
+    //提供鼠标事件绑定接口
+    OnMouse(action,handler,target){
+        this.setting.dom.addEventListener(action,target?handler.bind(target):handler);
+    }
+
     set backgroundColor(color){this.run.bgColor = color;}
 
     __bind_helper(dom,action,handler){
@@ -791,7 +826,7 @@ class jGE extends ShowObj{
     //构造函数
     constructor(){
         super();
-        this.version = [3,2,0];//大版本不兼容，中版本加功能，小版本修bug
+        this.version = [3,3,0];//大版本不兼容，中版本加功能，小版本修bug
         this.setting = {};
         const run = this.run = {};//配置了运行时的变量、参数等
         this.temp = {};
