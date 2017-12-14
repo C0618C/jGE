@@ -1,4 +1,8 @@
-# 项目概况
+# jGE  
+[![Version](https://img.shields.io/github/tag/c0618c/jGE.svg)](https://github.com/c0618c/jGE)
+[![License:MIT](https://img.shields.io/dub/l/vibe-d.svg)](https://raw.githubusercontent.com/c0618c/jGE/master/LICENSE)
+
+## 项目概况
 这是写着玩的一个项目。除了要完成开发目标外，还有希望通过具体的项目体验Git或GitHub的文化，以及体验前端发展的前沿。所以要是在操作记录或代码里发现些莫名其妙的地方，请不要见怪。  
 
 ## 什么是jGE，jGE能做些什么
@@ -22,6 +26,8 @@
   
 
 # 下一步目标  
+* 完成资源加载、管理模块
+* 硬件加速（性能优化）
 * 加入像素级的碰撞检测（开发及性能测试） 
 * 接驳Box2D  
 * 完成整套的场景调度方案  
