@@ -41,13 +41,14 @@ function loadFile(pathname, res) {
 }
 
 
-let pathDir = fpath.replace(local + "\\", "").replace("\\", "/");
+let pathDir = fpath.replace(local + "\\", "").replace("\\", "/").replace("\\/", "/");
+
 pathDir = pathDir.substr(0, pathDir.lastIndexOf("/"));
-let localDir = __dirname.replace(/\/|\\test/i, "");
+let localDir = __dirname.replace(/[\/\\]Test/i, "");
 http.createServer(function (req, res) {
     let reqPath = decodeURI(url.parse(req.url).pathname);
 
-    let pathnameCurPath = localDir + "\\"+ pathDir  + reqPath;
+    let pathnameCurPath = localDir +  pathDir  + reqPath;
     let pathname = localDir + reqPath;
 
     if (path.extname(pathname) == "") {
@@ -59,11 +60,12 @@ http.createServer(function (req, res) {
         pathnameCurPath += "index.html";
     }
 
+    pathnameCurPath = pathnameCurPath.replace("\/\/", "/");
 
     fs.exists(pathnameCurPath, function (exists) {
         if (exists) {
             loadFile(pathnameCurPath, res);
-        } else {            
+        } else {
             fs.exists(pathname, function (exists) {
                 if (exists) {
                     loadFile(pathname, res);
