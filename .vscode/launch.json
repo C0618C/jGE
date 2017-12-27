@@ -11,30 +11,6 @@
             "program": "${workspaceRoot}/Test/run.js",
             "args":["2262","${workspaceRoot}","${file}"]
         },
-        // {
-        //     "type": "PowerShell",
-        //     "request": "launch",
-        //     "name": "PowerShell Launch (IIS)",
-        //     "script": "${workspaceRoot}/test/run.ps1",
-        //     "args": [],
-        //     "cwd": "${workspaceRoot}"
-        // },
-        {
-            "type": "chrome",
-            "request": "launch",
-            "name": "Launch Chrome",
-            "url": "http://127.0.0.1:8989",
-            "sourceMaps": true,
-            "webRoot": "${workspaceRoot}/index.html"
-        },
-        // {
-        //     "type": "chrome",
-        //     "request": "attach",
-        //     "name": "Attach Chrome",
-        //     "port": 9222,
-        //     "sourceMaps": true,
-        //     "webRoot": "${workspaceRoot}"
-        // },
         {
             "type": "node",
             "request": "launch",

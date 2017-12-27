@@ -24,6 +24,40 @@
 同样也部署到阿里，[在这里](http://www.vmwed.com/sb/)可以看到最新的成果。  
   
   
+## How To Use - 如何使用
+本节将介绍如何部署开发测试环境。  
+
+### 环境要求
+下列软件请自行安装部署
+* nodejs v7或以上
+* npm
+
+### 部署
+Windows系统可以执行`makefile.bat`进行快速部署（推荐）。  
+或者通过以下步骤自行部署。
+
+在终端执行下列代码  
+
+  设置git忽略提交的文件
+```
+(
+    echo node_modules/
+    echo package-lock.json
+    echo .gitignore
+) >> .gitignore
+```
+  安装依赖的包
+```
+npm install gulp  gulp-concat  gulp-uglify  uglify-es  del  opn
+```
+  生成发布版
+```
+gulp
+```
+
+### 开发&测试
+源码在src文件夹内，修改后执行`gulp`输出文件，在编辑器打开index.html或其它入口网页，按F5即可运行服务器查看效果。
+
 
 # 下一步目标  
 * 完成资源加载、管理模块
