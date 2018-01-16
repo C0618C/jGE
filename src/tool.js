@@ -36,7 +36,7 @@ function GetEventPosition(event) {
 function  LoadResources({
         method="POST",async=true,data=null,type="json",url="",
         success=e=>{},error=e=>{},ontimeout=e=>{},onprogress=e=>{},onuprogress=e=>{}
-    }) {
+    }={}) {
 
     let dataType = type;
     //扩展资源类型
