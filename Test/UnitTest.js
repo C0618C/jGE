@@ -235,6 +235,13 @@ class UT{
 
         window.ss = s1
     }
+
+    static Test_Ajax(){
+        let rs = new ResourceManager();
+        rs.Ajax({url:"res/img/npc01.png",dataType:"image"}).then((e)=>{
+            console.log(e);
+        })
+    }
 }
 
 (function(){
