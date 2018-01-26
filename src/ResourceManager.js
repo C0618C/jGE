@@ -11,7 +11,7 @@ class ResourceManager  { //extends Manager
         //super(_jGE, "资源管理");
 
         this.package = new Map();           //资源包，资源的实际引用
-        this.resources = new WeakMap();     //所有资源的引用
+        //this.resources = new WeakMap();     //所有资源的引用
     }
 
     //初始化
@@ -20,21 +20,41 @@ class ResourceManager  { //extends Manager
     }
 
     //取得资源
-    GetRes(id, pakid = "") {
-        return this.resources.get(this.ResourceId(packid, id));
+    GetRes(id, packid = "") {
+        let r = undefined;
+        try{
+            r = this.package.get(packid).get(id);
+        }catch(e){
+            console.warn(`尝试获取资源失败(${packid}-${id})，资源尚未加载。信息：${e}`);
+            r =null;
+        }
+        return r;        
     }
 
     //加载资源
-    LoadResPackage({ packid = "", res = [] } = {}) {
+    LoadResPackage( packid = "", res = []) {
+        if(!this.package.has(packid)) this.package.set(packid,new Map());
 
+        res.forEach(r=>{
+            this.LoadRes(packid,r);
+        });
     }
 
     LoadRes(packid = "default", { type = "image", url = "", id = "" } = {}) {
-        if(this.resources.has(this.ResourceId(packid,id))){
+        let ray = this.package.get(packid);
+        
+        if(this.package.has(packid) && ray.has(id) ){
             console.warn(`发现重复加载资源：${packid}\\${id} 操作已停止。`);
             return;
         }
-        
+
+        this.Ajax({url:url,dataType:type}).then(obj=>{
+            obj.id = id;
+            ray.set(id,obj);
+            console.log("finish:",obj);
+        }).catch(e=>{
+            console.error("AjaxEror:",e);
+        });        
     }
 
     //释放资源包
@@ -49,18 +69,13 @@ class ResourceManager  { //extends Manager
         return this.package.delete(pakid);
     }
 
-    //统一设置资源规则
-    ResourceId(packid, id) { 
-        return Symbol.for(packid == "" ? id : `${packid}.${id}`);
-    }
-    
     Ajax({
         method="POST",url=""
-        ,data=""
+        ,data=""            //param for send
         ,async=true         //true（异步）或 false（同步）
-        ,ontimeout = 120
+        ,ontimeout = 12000
         ,responseType ="text"       // "arraybuffer", "blob", "document",  "text".
-        ,dataType = "json"
+        ,dataType = "json"          //json、image、video、script...
         ,onprogress=()=>{}          //自定义处理进程
     }={}){
         return new Promise(function(resolve,reject){
