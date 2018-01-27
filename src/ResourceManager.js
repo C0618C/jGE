@@ -83,6 +83,7 @@ class ResourceManager  { //extends Manager
             xhr.open(method,url,async);
             if(dataType == "image" ||dataType == "video"){
                 responseType = "blob";
+                if(dataType == "image") dataType = "img";
             }
             if(async) xhr.responseType = responseType;
             xhr.setRequestHeader("Content-type","application/x-www-four-urlencoded;charset=UTF-8");
@@ -95,22 +96,18 @@ class ResourceManager  { //extends Manager
 
             xhr.onload = function(e) {
                 if(this.status == 200||this.status == 304){
-                    let rsp = this.response;
+                    let rsp = null;
                     // console.log(this.response);
-                    if(!async && dataType == "json") rsp = JSON.parse(rsp);
-                    else if(dataType == "image"){
-                        rsp = new Image();
-                        rsp.onload = e => window.URL.revokeObjectURL(rsp.src);
-                        rsp.src = window.URL.createObjectURL(this.response);
-                    }else if(dataType == "video"){
-                        rsp = document.createElement("video");
-                        rsp.onload = e => window.URL.revokeObjectURL(rsp.src);
-                        rsp.src = window.URL.createObjectURL(this.response);
-                    }else if(dataType == "script"){
-                        let sblock = document.createElement("script");
-                        sblock.textContent = rsp;
-                        document.body.appendChild(sblock);
-                        //return;
+                    if(!async && dataType == "json") rsp = JSON.parse(this.response);
+                    else{
+                        rsp = document.createElement(dataType);
+                        if(dataType == "script"){
+                            rsp.textContent = this.response;
+                            document.body.appendChild(rsp);
+                        }else{
+                            rsp.src = window.URL.createObjectURL(this.response);
+                            rsp.onload = e => window.URL.revokeObjectURL(rsp.src);
+                        }
                     }
                     resolve.call(this,rsp);
                 }
