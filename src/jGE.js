@@ -15,7 +15,7 @@ class jGE extends ShowObj{
         //注册各个模块
         this.add(new EventManager(this));
         this.add(new SceneManager(this));
-        this.add(this.ResManager = new ResManager(this));
+        this.add(this.ResourceManager = new ResourceManager(this));
         this.add(new ObjectFactory(this));        
 
         const run = this.run;
