@@ -11,7 +11,9 @@ class ResourceManager extends Manager {
         super(_jGE, "资源管理");
         this.package = new Map();           //资源包，资源的实际引用
         this.processing = new Map();        //进度记录 用于记录当前所有加载情况 数据组层次与package相似
+        this.packprocessing = Symbol();     //package 里的特殊记录，用于记录当前包的下载进度；
         this.Init();
+        this.isLoading = false;
     }
 
     //
@@ -35,12 +37,14 @@ class ResourceManager extends Manager {
     LoadResPackage(packid = "", res = []) {
         if (!this.package.has(packid)) {
             this.package.set(packid, new Map());
-            this.processing.set(packid,new Map());
+            this.package.get(packid).set(this.packprocessing, 0);
+            this.processing.set(packid, new Map());
         }
 
         res.forEach(r => {
             this.LoadRes(packid, r);
         });
+        this.isLoading = true;
     }
 
     LoadRes(packid = "default", { type = "image", url = "", id = "" } = {}) {
@@ -52,15 +56,16 @@ class ResourceManager extends Manager {
             return;
         }
 
-        this.Ajax({ url: url, dataType: type
-            ,onprogress = (total,loaded)=>{
-                total=total<loaded?loaded:total;
-                this.rsy.set(id,{l:loaded,t:total});
+        this.Ajax({
+            url: url, dataType: type
+            , onprogress: (total, loaded) => {
+                total = total < loaded ? loaded : total;
+                rsy.set(id, { l: loaded, t: total });
             }
-         }).then(obj => {
+        }).then(obj => {
             obj.id = id;
             ray.set(id, obj);
-            console.log("finish:", obj);
+            ///console.log("finish:", obj);
         }).catch(e => {
             console.error("AjaxEror:", e);
         });
@@ -78,27 +83,45 @@ class ResourceManager extends Manager {
         return this.package.delete(pakid);
     }
 
-    GetPkProcessing(packid){
+    GetPkProcessing(packid) {
+        let pg = this.package.get(packid);
+        if (pg.get(this.packprocessing) == 1) return 1;
         let p = this.processing.get(packid);
-        let [cur,tol] = [0,0];
-        p.forEach(i=>{
+        let [cur, tol] = [0, 0];
+        p.forEach(i => {
             cur += i.l;
             tol += i.t;
         });
-        return cur / tol;
+        let r = Math.ceil(cur * 1000 / tol) / 1000
+        pg.set(this.packprocessing, r);
+        return r;
     }
 
     //取得进度
-    GetProcessing(){
+    GetProcessing(isAvg = true) {
         let p_ing = new Map();
         for (let k of this.processing.keys()) {
-            this.p_ing.set(k,GetPkProcessing(k));            
+            p_ing.set(k, this.GetPkProcessing(k));
         };
+
+        if (isAvg) {
+            let [l, t] = [0, 0];
+            for (let v of p_ing.values()) {
+                l += v;
+                t++;
+            }
+            return l / t;
+        }
 
         return p_ing;
     }
 
-    update(t,_jGE){
+    update(t, _jGE) {
+        if (this.isLoading) {
+            let p_s = this.GetProcessing();
+            if(Math.abs(p_s - 1) < Number.EPSILON * Math.pow(2, 2)) this.isLoading = false;
+        }
+
         // let proc = Number( this.GetProcessing());
         // //DEBUG:在控台显示资源加载进度
         // if(proc < 100 && proc > 0){
@@ -126,7 +149,7 @@ class ResourceManager extends Manager {
         //         this._jGE.broadcast(eventHead, this.ResCfg);
         //     }
         // }
-        
+
 
     }
 
