@@ -11,9 +11,9 @@ class ResourceManager extends Manager {
         super(_jGE, "资源管理");
         this.package = new Map();           //资源包，资源的实际引用
         this.processing = new Map();        //进度记录 用于记录当前所有加载情况 数据组层次与package相似
-        this.packprocessing = Symbol();     //package 里的特殊记录，用于记录当前包的下载进度；
+        this.packprocessing = Symbol();     //package 里的特殊记录，用于记录包的下载进度；每一个包都有一个。
         this.Init();
-        this.isLoading = false;
+        this.isLoading = false;             //是否在加载数据中
     }
 
     //
@@ -85,22 +85,29 @@ class ResourceManager extends Manager {
 
     GetPkProcessing(packid) {
         let pg = this.package.get(packid);
-        if (pg.get(this.packprocessing) == 1) return 1;
         let p = this.processing.get(packid);
+        if (p.get(this.packprocessing) == 1) return 1;
         let [cur, tol] = [0, 0];
         p.forEach(i => {
+            //if(i!=1){}
             cur += i.l;
             tol += i.t;
         });
-        let r = Math.ceil(cur * 1000 / tol) / 1000
-        pg.set(this.packprocessing, r);
+        let r = Math.ceil(cur * 1000 / tol) / 1000;
+        p.set(this.packprocessing, r);
+
+        if(r == 1) this._jGE.broadcast("jGE.Resource.Package.Finish",packid);
         return r;
     }
 
-    //取得进度
-    GetProcessing(isAvg = true) {
+    GetProcessing(){
+        return this.processing.get(this.packprocessing);
+    }
+
+    //更新统计下载进度
+    UpdateProcessing(isAvg = true) {
         let p_ing = new Map();
-        for (let k of this.processing.keys()) {
+        for (let k of this.package.keys()) {
             p_ing.set(k, this.GetPkProcessing(k));
         };
 
@@ -110,7 +117,10 @@ class ResourceManager extends Manager {
                 l += v;
                 t++;
             }
-            return l / t;
+
+            let o = l / t;
+            this.processing.set(this.packprocessing,o);
+            return o;
         }
 
         return p_ing;
@@ -118,39 +128,12 @@ class ResourceManager extends Manager {
 
     update(t, _jGE) {
         if (this.isLoading) {
-            let p_s = this.GetProcessing();
+            let p_s = this.UpdateProcessing();
             if(Math.abs(p_s - 1) < Number.EPSILON * Math.pow(2, 2)) this.isLoading = false;
+            console.log(p_s);
+
+            if(!this.isLoading) this._jGE.broadcast("jGE.Resource.Finish");
         }
-
-        // let proc = Number( this.GetProcessing());
-        // //DEBUG:在控台显示资源加载进度
-        // if(proc < 100 && proc > 0){
-        //     console.debug(`资源加载进度：${proc}%`)
-        // }
-
-        // //判断是否所有配置文件远程加载完毕，并发射相应的事件消息
-        // if(this.ResCfg.status === false){
-        //     let ok = true;
-        //     let eventHead = "jGE.Config.Loaded";
-        //     for(let k of Object.keys(this.ResCfg)){
-        //         if(k == "status") continue;
-        //         if(Array.isArray(this.ResCfg[k])&&this.ResCfg[k].broadcasted !== true){
-        //             this.ResCfg[k].forEach(i=>{ ok = (ok && (i.setting != undefined)) });
-
-        //             if(ok){
-        //                 this._jGE.broadcast(`${eventHead}.${k}`, this.ResCfg[k]);
-        //                 this.ResCfg[k].broadcasted = true;
-        //             }
-        //         }
-        //     }
-
-        //     if(ok){
-        //         this.ResCfg.status = true;
-        //         this._jGE.broadcast(eventHead, this.ResCfg);
-        //     }
-        // }
-
-
     }
 
     Ajax({

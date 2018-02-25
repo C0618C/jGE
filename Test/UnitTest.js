@@ -235,20 +235,6 @@ class UT{
 
         window.ss = s1
     }
-
-    static Test_Ajax(){
-        let rs = new ResourceManager();
-        // rs.Ajax({url:"res/img/npc01.png",dataType:"image"}).then((e)=>{
-        //     console.log(e);
-        // })
-
-        let rsid ="Symbol()";
-        rs.LoadResPackage("testA",[{id:rsid,url:"res/img/npc01.png",dataType:"image"}]);
-        //let im = rs.GetRes(rsid,"testA")
-        //document.body.appendChild(im);
-
-        window.ss = rs;
-    }
 }
 
 (function(){
