@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>jGE - Demo</title>
-    <script src="release/jGE.min.js"></script>
-    <script src="Test/UnitTest.js"></script>
+    <script src="release/jGE.js"></script>
+    <script src="Test/UnitRes.js"></script>
     <style>
         * {padding: 0px;margin: 0px;}
         body{overflow: hidden;}
@@ -23,8 +23,8 @@
         ,height:document.documentElement.clientHeight});
         document.getElementById("view_port").appendChild(x.GetDom());
         window.t  = x;
+        UR.Auto_Test(x);
 
-        UT.Auto_Test(x);
         
     })();
 </script>

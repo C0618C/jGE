@@ -36,7 +36,7 @@ function GetEventPosition(event) {
 function  LoadResources({
         method="POST",async=true,data=null,type="json",url="",
         success=e=>{},error=e=>{},ontimeout=e=>{},onprogress=e=>{},onuprogress=e=>{}
-    }) {
+    }={}) {
 
     let dataType = type;
     //扩展资源类型
@@ -671,7 +671,7 @@ class jGE extends ShowObj{
         //注册各个模块
         this.add(new EventManager(this));
         this.add(new SceneManager(this));
-        this.add(this.ResManager = new ResManager(this));
+        this.add(this.ResourceManager = new ResourceManager(this));
         this.add(new ObjectFactory(this));        
 
         const run = this.run;
@@ -1059,137 +1059,226 @@ class ObjectFactory extends Manager{
     }
 
 }
-/*export default */ class ResManager extends Manager{
-    constructor(_jGE){
-        super(_jGE,"资源管理");
-        this.LoadingQueue = new Map();  //当前/历史 开启的异步进程
-        this.ResHandler=new Map();
-        this.XHRRes = new Map();        //所有已成功加载的资源
-        this.ResCfg = {};       //所有配置
+/**
+ *      资源管理器
+ * 目标：   根据传入配置加载资源
+ *          供所有模块通过Id获取对应资源
+ *          缓存资源，避免资源重复反复加载
+ *          释放资源，在关卡切换等按需释放资源
+ *          资源加载进度查询
+ */
+class ResourceManager extends Manager {
+    constructor(_jGE) {
+        super(_jGE, "资源管理");
+        this.package = new Map();           //资源包，资源的实际引用
+        this.processing = new Map();        //进度记录 用于记录当前所有加载情况 数据组层次与package相似
+        this.packprocessing = Symbol();     //package 里的特殊记录，用于记录包的下载进度；每一个包都有一个。
         this.Init();
-
-        this._jGE.get = this.Get.bind(this);
-    }
-    //初始化
-    Init(){
-        //注册资源处理方法
-        this.ResHandler.set("default",(cfg,scene)=>{return res =>{}});
-        this.ResHandler.set("video",this.__get_finish_video);
-        this.ResHandler.set("script",(cfg,sence)=>console.log(cfg,sence));
-
-        LoadResources({
-            url:"./res/packages.cfg",type:"config",
-            success:data => this.LoadCfg(data),
-            error:e=>console.dir(e)
-        });
+        this.isLoading = false;             //是否在加载数据中
     }
 
-    //加载配置 根据配置文件【packages.cfg】加载所有配置。
-    LoadCfg(cfgs){
-        for(let cfg in cfgs){
-            cfgs[cfg].forEach(c=>{
-                this.XHRLoad({url:c.path,type:"config",id:c.path,finish:(e)=>{ c.setting = e;}});
-            });            
+    //
+    Init() {
+
+    }
+
+    //取得资源
+    GetRes(id, packid = "") {
+        let r = undefined;
+        try {
+            r = this.package.get(packid).get(id);
+        } catch (e) {
+            console.warn(`尝试获取资源失败(${packid}-${id})，资源尚未加载。信息：${e}`);
+            r = null;
         }
-
-        this.ResCfg = Object.assign({},cfgs,{status:false});
-
+        return r;
     }
+
     //加载资源
-    LoadRes(sence){
-        let res = this.ResCfg.reource;
-        if(!res||res.length == 0){
-             console.error("资源配置文件尚未加载，请检查packages.cfg文件reource节点。");
-             return false;
+    LoadResPackage(packid = "", res = []) {
+        if (!this.package.has(packid)) {
+            this.package.set(packid, new Map());
+            this.package.get(packid).set(this.packprocessing, 0);
+            this.processing.set(packid, new Map());
         }
-        
-        res.forEach(r=>{
-            if(sence && r.scene != sence) return;
-            r.setting.forEach(i=>{
-                if(!i.url||!i.type) return;
-                let finishHandler = this.ResHandler.get(this.ResHandler.has(i.type)?i.type:"default");
-                let setting = {id:`@${r.scene}#${i.id}`,type:i.type,url:i.url,success:null}
-                setting.finish = finishHandler(i,r.scene);
-                this.XHRLoad(setting);
-            });
+
+        res.forEach(r => {
+            this.LoadRes(packid, r);
+        });
+        this.isLoading = true;
+    }
+
+    LoadRes(packid = "default", { type = "image", url = "", id = "" } = {}) {
+        let ray = this.package.get(packid);
+        let rsy = this.processing.get(packid);
+
+        if (this.package.has(packid) && ray.has(id)) {
+            console.warn(`发现重复加载资源：${packid}\\${id} 操作已停止。`);
+            return;
+        }
+
+        this.Ajax({
+            url: url, dataType: type
+            , onprogress: (total, loaded) => {
+                total = total < loaded ? loaded : total;
+                rsy.set(id, { l: loaded, t: total });
+            }
+        }).then(obj => {
+            obj.id = id;
+            ray.set(id, obj);
+            ///console.log("finish:", obj);
+        }).catch(e => {
+            console.error("AjaxEror:", e);
+        });
+    }
+
+    //释放资源包
+    UnLoadResPackage(pakid) {
+        if (!this.package.has(pakid)) return false;
+        var bag = this.package.get(pakid);
+
+        bag.forEach(element => {
+            element = null;
         });
 
-        return true;
+        return this.package.delete(pakid);
     }
-    XHRLoad(setting){
-        if(this.XHRRes.has(setting.id?setting.id:setting.url)){
-            console.info("资源加载优化：发现重复加载资源，将调取本地缓存。");
-            let res = this.XHRRes.get(setting.url);
-            setting.finish(res);
-        }else{
-            setting.onprogress = (total,loaded)=>{total=total<loaded?loaded:total;this.LoadingQueue.set(setting.id,{l:loaded,t:total});};
-            setting.success = res =>{
-                this.XHRRes.set( setting.id?setting.id:setting.url,res);
-                setting.finish(res);
-            }
-            LoadResources(setting);
-        }
+
+    GetPkProcessing(packid) {
+        let pg = this.package.get(packid);
+        let p = this.processing.get(packid);
+        if (p.get(this.packprocessing) == 1) return 1;
+        let [cur, tol] = [0, 0];
+        p.forEach(i => {
+            //if(i!=1){}
+            cur += i.l;
+            tol += i.t;
+        });
+        let r = Math.ceil(cur * 1000 / tol) / 1000;
+        p.set(this.packprocessing, r);
+
+        if(r == 1) this._jGE.broadcast("jGE.Resource.Package.Finish",packid);
+        return r;
     }
-    //取得进度
+
     GetProcessing(){
-        let [cL,cT]=[0,0];
-        this.LoadingQueue.forEach(i=>{cL+=i.l;cT+=i.t;});
-        cT = cT || 1;
-        return Number((cL/cT*100).toFixed(2));
-    }
-    //取消
-    Abort(){
-
+        return this.processing.get(this.packprocessing);
     }
 
-    //根据ID获取资源
-    Get(id){ return this.XHRRes.get(id); }
+    //更新统计下载进度
+    UpdateProcessing(isAvg = true) {
+        let p_ing = new Map();
+        for (let k of this.package.keys()) {
+            p_ing.set(k, this.GetPkProcessing(k));
+        };
 
-    update(t,_jGE){
-        //if(this.ObjectFactory)  this.ObjectFactory.update(t,_jGE);
+        if (isAvg) {
+            let [l, t] = [0, 0];
+            for (let v of p_ing.values()) {
+                l += v;
+                t++;
+            }
 
-        let proc = Number( this.GetProcessing());
-        //DEBUG:在控台显示资源加载进度
-        if(proc < 100 && proc > 0){
-            console.debug(`资源加载进度：${proc}%`)
+            let o = l / t;
+            this.processing.set(this.packprocessing,o);
+            return o;
         }
 
+        return p_ing;
+    }
 
-        //判断是否所有配置文件远程加载完毕，并发射相应的事件消息
-        if(this.ResCfg.status === false){
-            let ok = true;
-            let eventHead = "jGE.Config.Loaded";
-            for(let k of Object.keys(this.ResCfg)){
-                if(k == "status") continue;
-                if(Array.isArray(this.ResCfg[k])&&this.ResCfg[k].broadcasted !== true){
-                    this.ResCfg[k].forEach(i=>{ ok = (ok && (i.setting != undefined)) });
+    update(t, _jGE) {
+        if (this.isLoading) {
+            let p_s = this.UpdateProcessing();
+            if(Math.abs(p_s - 1) < Number.EPSILON * Math.pow(2, 2)) this.isLoading = false;
+            console.log(p_s);
 
-                    if(ok){
-                        this._jGE.broadcast(`${eventHead}.${k}`, this.ResCfg[k]);
-                        this.ResCfg[k].broadcasted = true;
+            if(!this.isLoading) this._jGE.broadcast("jGE.Resource.Finish");
+        }
+
+        // //判断是否所有配置文件远程加载完毕，并发射相应的事件消息
+        // if(this.ResCfg.status === false){
+        //     let ok = true;
+        //     let eventHead = "jGE.Config.Loaded";
+        //     for(let k of Object.keys(this.ResCfg)){
+        //         if(k == "status") continue;
+        //         if(Array.isArray(this.ResCfg[k])&&this.ResCfg[k].broadcasted !== true){
+        //             this.ResCfg[k].forEach(i=>{ ok = (ok && (i.setting != undefined)) });
+
+        //             if(ok){
+        //                 this._jGE.broadcast(`${eventHead}.${k}`, this.ResCfg[k]);
+        //                 this.ResCfg[k].broadcasted = true;
+        //             }
+        //         }
+        //     }
+
+        //     if(ok){
+        //         this.ResCfg.status = true;
+        //         this._jGE.broadcast(eventHead, this.ResCfg);
+        //     }
+        // }
+
+
+    }
+
+    Ajax({
+        method = "POST", url = ""
+        , data = ""            //param for send
+        , async = true         //true（异步）或 false（同步）
+        , ontimeout = 12000
+        , responseType = "text"       // "arraybuffer", "blob", "document",  "text".
+        , dataType = "json"          //json、image、video、script...
+        , onprogress = () => { }          //自定义处理进程
+    } = {}) {
+        return new Promise(function (resolve, reject) {
+            let xhr = new XMLHttpRequest();
+            xhr.open(method, url, async);
+            if (dataType == "image" || dataType == "video") {
+                responseType = "blob";
+                if (dataType == "image") dataType = "img";
+            }
+            if (async) xhr.responseType = responseType;
+            xhr.setRequestHeader("Content-type", "application/x-www-four-urlencoded;charset=UTF-8");
+            xhr.ontimeout = ontimeout;
+            // xhr.onreadystatechange=function(){
+            //     if(xhr.readyState==4 && xhr.status==200){
+
+            //     }
+            // }
+
+            xhr.onload = function (e) {
+                if (this.status == 200 || this.status == 304) {
+                    let rsp = null;
+                    // console.log(this.response);
+                    if (!async && dataType == "json") rsp = JSON.parse(this.response);
+                    else {
+                        rsp = document.createElement(dataType);
+                        if (dataType == "script") {
+                            rsp.textContent = this.response;
+                            document.body.appendChild(rsp);
+                        } else {
+                            rsp.src = window.URL.createObjectURL(this.response);
+                            rsp.onload = e => window.URL.revokeObjectURL(rsp.src);
+                        }
                     }
+                    resolve.call(this, rsp);
                 }
-            }
+            };
+            xhr.onerror = reject;
+            // xhr.upload.onprogress = onuprogress;
+            xhr.onprogress = function (e) {
+                onprogress.call(this, e.total, e.loaded);
+            };
 
-            if(ok){
-                this.ResCfg.status = true;
-                this._jGE.broadcast(eventHead, this.ResCfg);
+            try {
+                xhr.send(data);
+            } catch (e) {
+                reject.call(this, e);
             }
-        }
-        
-
+        });
     }
 
-    //载入资源
-    __get_finish_video(cfg,scene){
-        return video=>{
-            let v_cfg = {video:video};
-            if(cfg.loop) video.loop = true;
-            if(!Number.isNaN( Number.parseFloat(cfg.volume))) video.volume = Number.parseFloat(cfg.volume);
-        }
-    }
 }
-
 class SceneManager extends Manager{
     constructor(_jGE){
         super(_jGE,"场景调度管理"); 
