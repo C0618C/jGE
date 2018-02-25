@@ -4,14 +4,16 @@
     <meta charset="UTF-8">
     <title>jGE - Demo</title>
     <script src="release/jGE.js"></script>
-    <script src="Test/UnitRes.js"></script>
+    <script src="Test/UnitTest.js"></script>
     <style>
         * {padding: 0px;margin: 0px;}
         body{overflow: hidden;}
+        #fork_me{position: fixed;top:0px;right: 0px;z-index: 9999; }
     </style>
 </head>
 <body>
 <div id="view_port"></div>
+<div id="fork_me"><a href="https://github.com/C0618C/jGE"><img src="Test/forkme-on-github-right.png" title="trun to github"/></a></div>
 
 <script src="src/Availability.js"></script>
 
@@ -23,8 +25,8 @@
         ,height:document.documentElement.clientHeight});
         document.getElementById("view_port").appendChild(x.GetDom());
         window.t  = x;
-        UR.Auto_Test(x);
 
+        x.on("jGE.Scene.Logo.End",()=>UT.Auto_Test(x));
         
     })();
 </script>

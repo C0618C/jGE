@@ -16,7 +16,7 @@ class jGE extends ShowObj{
         this.add(new EventManager(this));
         this.add(new SceneManager(this));
         this.add(this.ResourceManager = new ResourceManager(this));
-        this.add(new ObjectFactory(this));        
+        //this.add(new ObjectFactory(this));        
 
         const run = this.run;
         const setting = this.setting;

@@ -2,8 +2,8 @@ class SceneManager extends Manager{
     constructor(_jGE){
         super(_jGE,"场景调度管理"); 
 
-        _jGE.one("jGE.Config.Loaded.scene",this.InitScene.bind(this));
-        _jGE.one("jGE.Config.Loaded",this.PlayScene.bind(this));
+        // _jGE.one("jGE.Config.Loaded.scene",this.InitScene.bind(this));
+        // _jGE.one("jGE.Config.Loaded",this.PlayScene.bind(this));
 
         this.sceneCfg=new Map();
         this.nextScene = "";            //将要播放的下一场景

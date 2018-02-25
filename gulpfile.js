@@ -14,7 +14,7 @@ let model = [
     , "./src/ShowObj.js"
     , "./src/jGE.js"
     , "./src/EventManager.js"
-    , "./src/ObjectFactory.js"
+    //, "./src/ObjectFactory.js"
     , "./src/ResourceManager.js"
     //, "./src/ResManager.js"
     , "./src/SceneManager.js"
