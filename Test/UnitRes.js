@@ -30,4 +30,15 @@ class UR {
         })
 
     }
+
+    static Test_Audio() {
+        let rs = new ResourceManager(new jGE());
+        rs.Ajax({ url: "res/skycity.mp3", dataType: "audio" }).then((e) => {
+            document.body.appendChild(e);
+            e.play();
+            console.log(e)
+        })
+
+        window.ss = rs;
+    }
 }

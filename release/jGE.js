@@ -826,7 +826,7 @@ class jGE extends ShowObj{
     //构造函数
     constructor(){
         super();
-        this.version = [4,0,0];//大版本不兼容，中版本加功能，小版本修bug
+        this.version = [4,1,0];//大版本不兼容，中版本加功能，小版本修bug
         this.setting = {};
         const run = this.run = {};//配置了运行时的变量、参数等
         this.temp = {};
@@ -1094,7 +1094,7 @@ class ResourceManager extends Manager {
         return new Promise(function (resolve, reject) {
             let xhr = new XMLHttpRequest();
             xhr.open(method, url, async);
-            if (dataType == "image" || dataType == "video") {
+            if (["image","video","audio"].includes(dataType)) {
                 responseType = "blob";
                 if (dataType == "image") dataType = "img";
             }

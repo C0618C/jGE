@@ -148,7 +148,7 @@ class ResourceManager extends Manager {
         return new Promise(function (resolve, reject) {
             let xhr = new XMLHttpRequest();
             xhr.open(method, url, async);
-            if (dataType == "image" || dataType == "video") {
+            if (["image","video","audio"].includes(dataType)) {
                 responseType = "blob";
                 if (dataType == "image") dataType = "img";
             }
