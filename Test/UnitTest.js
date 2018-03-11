@@ -70,30 +70,23 @@ class UT{
     static Test_tk_Script(x){
         console.info("开始执行-显示对象-精灵图部件测试");
         console.profile("tk_script_001");
-        let img = new Image();
+        let packageId = "BgImage";
+        let rsid = "SkyCity";
+        let rs = this._jGE.ResourceManager;
+        rs.LoadResPackage(packageId, [{ id: rsid, url: "res/skycity.jpg", dataType: "image" }]);
 
-        img.src = "https://img.alicdn.com/tps/i2/TB1bNE7LFXXXXaOXFXXwFSA1XXX-292-116.png"
-        //img.src="res/x1.gif"
-        img.onload = e => {
-            let i1 = new $tk_sprite({img:img,update:function(){this.angle +=0.01;}});
-            let s1 = new ShowObj({x:500,y:300});
-            i1.scale(1.25);
-            s1.add(i1);
-            x.add(s1);
-
-            //setInterval(()=>{s1.angle+=0.01;if(s1.angle<0)s1.angle+=2*π;},32);
-        }
-
-        console.profileEnd("tk_script_001");
-    }
-
-    //单独测试-异步加载图片信息
-    static Test_xhr_load_img(x){
-        LoadResources({url:"res/t.jpg",type:"image",
-            success:(img)=>{
-                document.getElementById("view_port").appendChild(img);
+        this._jGE.one("jGE.Resource.Package.Finish",id=>{
+            if(id == packageId){
+                let img = rs.GetRes(rsid,packageId)
+                let i1 = new $tk_sprite({img:img});
+                let s1 = new ShowObj({x:img.width/2,y:img.height/2});
+                i1.
+                s1.add(i1);
+                this._jGE.add(s1);
             }
         });
+
+        console.profileEnd("tk_script_001");
     }
     
     //单独测试-视频部件

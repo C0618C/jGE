@@ -32,124 +32,6 @@ function GetEventPosition(event) {
     return new Vector2D(x, y);
 }
 
-//加载文件
-function  LoadResources({
-        method="POST",async=true,data=null,type="json",url="",
-        success=e=>{},error=e=>{},ontimeout=e=>{},onprogress=e=>{},onuprogress=e=>{}
-    }={}) {
-
-    let dataType = type;
-    //扩展资源类型
-    if(type == "image" || type == "video"){
-         method = "GET";
-         type = "blob";
-    }else if (type == "config"){
-        method = "GET";
-        type = "json";
-    }else if(type = "script"){
-        method = "GET";
-        type="text";
-    }
-
-    let xhr = new XMLHttpRequest();
-    xhr.open(method,url,async);
-
-    if(async) xhr.responseType = type;
-    xhr.setRequestHeader("Content-type","application/x-www-four-urlencoded;charset=UTF-8");
-    xhr.onload = function(e) {
-        if(this.status == 200||this.status == 304){
-            //alert(this.responseText);
-            let rsp = this.response;
-            if(!async && type == "json") rsp = JSON.parse(rsp);
-            else if(dataType == "image"){
-                rsp = new Image();
-                rsp.src = window.URL.createObjectURL(this.response);
-                rsp.onload = e => window.URL.revokeObjectURL(rsp.src);
-
-            }else if(dataType == "video"){
-                rsp = document.createElement("video");
-                rsp.src = window.URL.createObjectURL(this.response);
-                rsp.onload = e => window.URL.revokeObjectURL(rsp.src);
-            }else if(dataType == "script"){
-                let sblock = document.createElement("script");
-                sblock.textContent = rsp;
-                document.body.appendChild(sblock);
-                //return;
-            }
-            success.call(this,rsp);
-        }
-    };
-    xhr.ontimeout = ontimeout;
-    xhr.onerror = error;
-    xhr.upload.onprogress = onuprogress;
-    xhr.onprogress =function (e) {
-        onprogress.call(this,e.total,e.loaded);
-    };
-
-    try{
-        xhr.send(data);
-    }catch (e){
-        error.call(this,e);
-    }
-
-}
-
-function GetURL({
-method="POST",async=true,data=null,type="json",url="",
-ontimeout=e=>{},onprogress=e=>{},onuprogress=e=>{}}){
-    return new Promise((resolve, reject) => {
-        let dataType = type;
-        let rspType;
-        switch(type){
-            case "image":
-            case "video":
-                rspType = "blob";method = "GET";
-                break;
-            case "config":
-                rspType = "json";method = "GET";
-                break;
-            case "script":
-                rspType="text";method = "GET";
-                break;
-            default:
-                rspType = type;
-                break;
-        }
-
-        let xhr = new XMLHttpRequest();
-        xhr.open(method,url,async);
-        if(async) xhr.responseType = rspType;//异步时配置请求类型
-        xhr.setRequestHeader("Content-type","application/x-www-four-urlencoded;charset=UTF-8");
-        xhr.onload = function(e){
-            if(this.status == 404) return reject(this);
-            if(this.status == 200||this.status == 304){
-                let rsp = this.response;
-                if(!async && type == "json")
-                    rsp = JSON.parse(rsp);
-                else if(dataType == "image"){
-                    rsp = new Image();
-                    rsp.src = window.URL.createObjectURL(this.response);
-                    rsp.onload = e => window.URL.revokeObjectURL(rsp.src);
-                }else if(dataType == "video"){
-                    rsp = document.createElement("video");
-                    rsp.src = window.URL.createObjectURL(this.response);
-                    rsp.onload = e => window.URL.revokeObjectURL(rsp.src);
-                }else if(dataType == "script"){
-                    let sblock = document.createElement("script");
-                    sblock.textContent = rsp;
-                    document.body.appendChild(sblock);
-                }
-                resolve(rsp);
-            }
-        };
-        xhr.ontimeout = ontimeout;
-        xhr.onerror = reject;
-        xhr.upload.onprogress = onuprogress;
-        xhr.onprogress =(e)=>onprogress.call(this,e.total,e.loaded);
-
-        xhr.send(data);
-    });
-}
 class Vector2D {
     constructor(...args) {
         //args.length == 1?({x:this.x = 0,y:this.y=0} = args[0]):([this.x = 0,this.y=0]=args);
@@ -349,7 +231,7 @@ class $$tk_base{
         this.angle = 0;
         this.parentAngle = 0;
         this.styleType = styleType;
-
+        this.alpha = 1;
         this.setStyle(style);
         
         this.pos = new Vector2D(...pos);
@@ -390,6 +272,7 @@ class $$tk_base{
     __draw(ctx,bef_d,aft_d){
         ctx.save();
         if(bef_d) bef_d(ctx);
+        ctx.globalAlpha = this.alpha;
         if(this.fillStyle){
             ctx.fillStyle = this.fillStyle;
             ctx.fill();
@@ -447,6 +330,7 @@ class $tk_path extends $$tk_base{
 
     toPath(ctx){
         ctx.beginPath();
+        if(this.dash) ctx.setLineDash(this.dash);
         ctx.translate(this.centerPoint.x,this.centerPoint.y);
         ctx.rotate(this.angle+this.parentAngle);
         ctx.moveTo(this.points[0].x,this.points[0].y);
@@ -513,6 +397,8 @@ class $tk_sprite{
         this.angle = 0;
         this.parentAngle = 0;
         this.isDel = false;
+        this.alpha = 1;
+        if(img.width * img.height == 0) console.warn("加载的图像资源宽高异常：",img);
     }
     update(t,pPos,angle){
         this.centerPoint=pPos.Add(this.pos.Turn(angle));
@@ -527,6 +413,7 @@ class $tk_sprite{
         ctx.save();
         ctx.translate(this.centerPoint.x,this.centerPoint.y);
         ctx.rotate(this.angle+this.parentAngle);
+        ctx.globalAlpha = this.alpha;
         if(this.sarea)   ctx.drawImage(this.img,this.sarea.x,this.sarea.y,this.sarea.width,this.sarea.height,-this.area.width/2,-this.area.height/2,this.area.width,this.area.height);
         else if(this.area) ctx.drawImage(this.img,-this.area.width/2,-this.area.height/2,this.area.width,this.area.height);
 
@@ -826,7 +713,7 @@ class jGE extends ShowObj{
     //构造函数
     constructor(){
         super();
-        this.version = [4,1,0];//大版本不兼容，中版本加功能，小版本修bug
+        this.version = [4,2,0];//大版本不兼容，中版本加功能，小版本修bug
         this.setting = {};
         const run = this.run = {};//配置了运行时的变量、参数等
         this.temp = {};

@@ -84,7 +84,7 @@ class $$tk_base{
         this.angle = 0;
         this.parentAngle = 0;
         this.styleType = styleType;
-
+        this.alpha = 1;
         this.setStyle(style);
         
         this.pos = new Vector2D(...pos);
@@ -125,6 +125,7 @@ class $$tk_base{
     __draw(ctx,bef_d,aft_d){
         ctx.save();
         if(bef_d) bef_d(ctx);
+        ctx.globalAlpha = this.alpha;
         if(this.fillStyle){
             ctx.fillStyle = this.fillStyle;
             ctx.fill();
@@ -182,6 +183,7 @@ class $tk_path extends $$tk_base{
 
     toPath(ctx){
         ctx.beginPath();
+        if(this.dash) ctx.setLineDash(this.dash);
         ctx.translate(this.centerPoint.x,this.centerPoint.y);
         ctx.rotate(this.angle+this.parentAngle);
         ctx.moveTo(this.points[0].x,this.points[0].y);
@@ -248,6 +250,8 @@ class $tk_sprite{
         this.angle = 0;
         this.parentAngle = 0;
         this.isDel = false;
+        this.alpha = 1;
+        if(img.width * img.height == 0) console.warn("加载的图像资源宽高异常：",img);
     }
     update(t,pPos,angle){
         this.centerPoint=pPos.Add(this.pos.Turn(angle));
@@ -262,6 +266,7 @@ class $tk_sprite{
         ctx.save();
         ctx.translate(this.centerPoint.x,this.centerPoint.y);
         ctx.rotate(this.angle+this.parentAngle);
+        ctx.globalAlpha = this.alpha;
         if(this.sarea)   ctx.drawImage(this.img,this.sarea.x,this.sarea.y,this.sarea.width,this.sarea.height,-this.area.width/2,-this.area.height/2,this.area.width,this.area.height);
         else if(this.area) ctx.drawImage(this.img,-this.area.width/2,-this.area.height/2,this.area.width,this.area.height);
 
