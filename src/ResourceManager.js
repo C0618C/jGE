@@ -86,12 +86,16 @@ class ResourceManager extends Manager {
     GetPkProcessing(packid) {
         let pg = this.package.get(packid);
         let p = this.processing.get(packid);
-        if (p.get(this.packprocessing) == 1) return 1;
+        let curPkP =p.get(this.packprocessing);
+        if (curPkP == 1) return 1;
+        else if(Object.is(curPkP,NaN)) p.set(this.packprocessing, 0);
+
         let [cur, tol] = [0, 0];
         p.forEach(i => {
-            //if(i!=1){}
-            cur += i.l;
-            tol += i.t;
+            if(i){
+                cur += i.l;
+                tol += i.t;
+            }
         });
         let r = Math.ceil(cur * 1000 / tol) / 1000;
         p.set(this.packprocessing, r);
