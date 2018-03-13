@@ -223,15 +223,32 @@ class $tk_ellipse extends $$tk_base{
         ctx.rotate(this.angle+this.parentAngle);
         if(this.a!=this.b)ctx.scale(this.ratioX, this.ratioY);
         ctx.beginPath();
-        ctx.arc(this.pos.x / this.ratioX, this.pos.y / this.ratioY, this.r, 0, 2*π, false);
+        ctx.arc(this.pos.x / this.ratioX, this.pos.y / this.ratioY, this.r, 0, π2, false);
     }
 }
 
 
 //一个由圆弧组成的部件 //TODO:弧形组件
 class $tk_arc extends $$tk_base{
-    constructor(){
-        super({styleType:styleType,style:style,pos:pos});
+    constructor({styleType="stroke",style="white 1",cenPoin=[0,0],radius=100, startAngle=0, endAngle=π2, anticlockwise = true}={}){
+        super({styleType:styleType,style:style,pos:new Vector2D(...cenPoin)});
+        this.r = radius;
+        this.sAngle = startAngle;
+        this.eAngle = endAngle;
+        this.anticlockwise = anticlockwise;
+    }
+    update(t,pPos,angle){
+        this.centerPoint=pPos.Add(this.pos.Turn(angle));
+        super.update(t,pPos,angle);
+    }
+
+    render(ctx){
+        this.__draw(ctx,()=>{
+            ctx.translate(this.centerPoint.x,this.centerPoint.y);
+            ctx.rotate(this.angle+this.parentAngle);
+            ctx.beginPath();
+            ctx.arc(this.pos.x, this.pos.y, this.r, this.sAngle, this.eAngle, this.anticlockwise);
+        },false);
     }
 }
 
