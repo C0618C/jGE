@@ -390,6 +390,7 @@ class $tk_arc extends $$tk_base{
         this.ePoin = endPoin;
     }
     update(t,pPos,angle){
+        this.centerPoint=pPos.Add(this.pos.Turn(angle));
         super.update(t,pPos,angle);
     }
 
