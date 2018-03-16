@@ -47,7 +47,7 @@ class ShowObj extends Vector2D{
             if(o.isDel){
                 this.Objects.uObj.splice(i,1);
             }else{
-                o.update(t,(new Vector2D(this)).Add(pPos),this.angle+angle);
+                o.update(t,this.Add(pPos),this.angle+angle);
             }
         });
 
@@ -123,6 +123,7 @@ class $$tk_base{
         }
     }
     __draw(ctx,bef_d,aft_d){
+        if(this.strokeStyle && this.lineWidth == 0) return;
         ctx.save();
         if(bef_d) bef_d(ctx);
         ctx.globalAlpha = this.alpha;

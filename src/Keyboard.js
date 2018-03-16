@@ -7,13 +7,13 @@ class Keyboard extends Manager{
         this.Role = "Keyboard";
         this.isEnable = true;
         
-        this.allkey = new Map();
+        this.allkey = new Map();                
         this._virtualkeyboard = new ShowObj();
 
-        const t = this._virtualkeyboard.AddIn.bind(this._virtualkeyboard);
-        const t2 = this._virtualkeyboard.Copy.bind(this._virtualkeyboard);
-        this._virtualkeyboard.AddIn = (...x)=>{t(...x);this.flash();}
-        this._virtualkeyboard.Copy = (...x)=>{t2(...x);this.flash();}
+        // const t = this._virtualkeyboard.AddIn.bind(this._virtualkeyboard);
+        // const t2 = this._virtualkeyboard.Copy.bind(this._virtualkeyboard);
+        // this._virtualkeyboard.AddIn = (...x)=>{t(...x);this.flash();}
+        // this._virtualkeyboard.Copy = (...x)=>{t2(...x);this.flash();}
 
     }
 
@@ -64,11 +64,17 @@ class Keyboard extends Manager{
     //取得整个虚拟键盘的可视化对象
     get VirtualKeyboard(){ return this._virtualkeyboard;}
 
-    //刷新键盘，为了解决键盘整体移位后，按键第一次触发会在原来位置闪现一下的问题
-    flash(){
-        this.allkey.forEach(k=>k.flash());
-        this.VirtualKeyboard.update(0,this._jGE);
-        this.allkey.forEach(k=>k.reset());
+    // //刷新键盘，为了解决键盘整体移位后，按键第一次触发会在原来位置闪现一下的问题
+    // flash(){
+    //     this.allkey.forEach(k=>k.flash());
+    //     this.VirtualKeyboard.update(0,this._jGE);
+    //     this.allkey.forEach(k=>k.reset());
+    // }
+
+    //设置键盘整体位置
+    SetPos(pos){
+        if(pos.x!=undefined && pos.y!=undefined) this.VirtualKeyboard.Copy(pos);
+        else if(Array.isArray(pos)) this.VirtualKeyboard.Copy({x:pos[0],y:pos[1]});
     }
 
 }
@@ -84,7 +90,7 @@ class Key  extends ShowObj{
         hoverObj 按钮被划过、聚焦
         actObj 按钮感应区域
     */
-    constructor({key="",code="",handler=null,upObjs=[],downObjs=[],hoverObj=[],actObj=null,x=0,y=0,angle=0}={}){
+    constructor({key="",code="",handler=null,upObjs=[],downObjs=null,hoverObj=null,actObj=null,x=0,y=0,angle=0}={}){
         super({x:x,y:y,angle:angle});
 
         this.handler = new Map();
@@ -92,7 +98,7 @@ class Key  extends ShowObj{
         this.KEYSTATUS = {"Normal":Symbol(),"Down":Symbol(),"Hover":Symbol()};
         this.status = this.KEYSTATUS.Down;
 
-        this.btShowObjs = new Map([[this.KEYSTATUS.Normal,upObjs],[this.KEYSTATUS.Down,downObjs],[this.KEYSTATUS.Hover,hoverObj]]);
+        this.btShowObjs = new Map([[this.KEYSTATUS.Normal,upObjs],[this.KEYSTATUS.Down,downObjs||upObjs],[this.KEYSTATUS.Hover,hoverObj||upObjs]]);
 
         this.activeArea = actObj || upObjs[0];
         this._jGE = null;
@@ -150,13 +156,13 @@ class Key  extends ShowObj{
         }
     }
 
-    flash(){
-        this.btShowObjs.forEach(oL=>oL.forEach(o=> this.add(o)));
-    }
+    // flash(){
+    //     this.btShowObjs.forEach(oL=>oL.forEach(o=> this.add(o)));
+    // }
 
-    reset(){
-        this.btShowObjs.forEach((oL,k)=>{if(k != this.status) oL.forEach(o=> this.del(o))});
-    }
+    // reset(){
+    //     this.btShowObjs.forEach((oL,k)=>{if(k != this.status) oL.forEach(o=> this.del(o))});
+    // }
 
     _IsHit(event){
         return this._jGE.IsInIt(event,this.activeArea);
