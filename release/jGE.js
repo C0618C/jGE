@@ -1232,7 +1232,7 @@ class Key  extends ShowObj{
         this.KEYSTATUS = {"Normal":Symbol(),"Down":Symbol(),"Hover":Symbol()};
         this.status = this.KEYSTATUS.Down;
 
-        this.btShowObjs = new Map([[this.KEYSTATUS.Normal,upObjs],[this.KEYSTATUS.Down,downObjs||upObjs],[this.KEYSTATUS.Hover,hoverObj||upObjs]]);
+        this.btShowObjs = new Map([[this.KEYSTATUS.Normal,upObjs],[this.KEYSTATUS.Down,downObjs],[this.KEYSTATUS.Hover,hoverObj]]);
 
         this.activeArea = actObj || upObjs[0];
         this._jGE = null;
@@ -1261,6 +1261,7 @@ class Key  extends ShowObj{
         });
     }
 
+    //type 动作类型，已被归类为[keydown,keyup,over,out]
     addEventListener(type,handler){
         if(!this.handler.has(type)) this.handler.set(type,new Set());
 
@@ -1285,8 +1286,8 @@ class Key  extends ShowObj{
         }
 
         if(oldStatus != this.status){
-            this.btShowObjs.get(oldStatus).forEach(o=>{this.del(o);});
-            this.btShowObjs.get(this.status).forEach(o=>{this.add(o);});
+            if(this.btShowObjs.get(oldStatus)!=null) this.btShowObjs.get(oldStatus).forEach(o=>{this.del(o);});
+            if(this.btShowObjs.get(this.status)!=null) this.btShowObjs.get(this.status).forEach(o=>{this.add(o);});
         }
     }
 
@@ -1302,6 +1303,59 @@ class Key  extends ShowObj{
         return this._jGE.IsInIt(event,this.activeArea);
     }
 
+}
+
+//拖拽控制助手
+class DragHelper{
+    // constructor(_jGE,setting){
+    //     // let w = setting.tape.cell_width*(setting.pitch_names.length-1)
+    //     // let h = setting.tape.max_height;
+    //     // let pu = new $tk_path({styleType:'stroke',style:"red 1" ,points:[[0,0],[w,0],[w,h],[0,h],-1],pos:[0,0]});
+    //     // let pd = new $tk_path({styleType:'both',style:{fillStyle:"red",strokeStylest:"white 2"} ,points:[[0,0],[w,0],[w,h],[0,h],-1],pos:[0,0]});
+
+
+        
+    //     // let k  = new Key({
+    //     //     code:"clickDown",
+    //     //     upObjs:[pu],downObjs:[pd],x:0,y:0
+    //     // });
+    //     // DragHelper.InitDrag(k,{
+    //     //     startCallback:(e)=>console.log("start!",e)
+    //     //     ,moveCallback:(e)=>console.log("move",e)
+    //     //     ,endCallback:(e)=>console.log("end",e)
+    //     // })
+    //     // let kb = new Keyboard(_jGE);
+    //     // kb.add(k);        
+    //     // kb.SetPos(setting.tape.pos)
+    //     // _jGE.add(kb);
+
+
+    // }
+
+
+    static InitDrag(key,{startCallback=null,moveCallback=null,endCallback=null}={}){
+        key._drag_status = {
+            startPos:{x:0,y:0}
+            ,isDraging:false
+        };
+
+        key.addEventListener("keydown",e=>{
+            key._drag_status.startPos = new Vector2D(e);
+            key._drag_status.isDraging = true;
+            if(startCallback) startCallback.call(key);
+        });
+
+        key.addEventListener("over",e=>{
+            if(!key._drag_status.isDraging) return;
+            if(moveCallback) moveCallback.call(key,key._drag_status.startPos,e);
+        });
+
+        key.addEventListener("keyup",e=>{
+            if(endCallback) endCallback.call(key,e);
+            key._drag_status.isDraging = false;
+        })
+
+    }
 }
 
 //用于获取基本配置
