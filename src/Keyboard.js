@@ -39,6 +39,7 @@ class Keyboard extends Manager{
             case "touchstart": e.type = "keydown"; break;
             case "touchmove": e.type = "over"; break;
             case "touchend": e.type = "keyup"; break;
+            case "mousewheel": e.type = "scroll";e.delta = event.deltaY; break;
         }
 
         this.allkey.forEach(k=>k.on(e));
@@ -199,7 +200,7 @@ class DragHelper{
     // }
 
 
-    static InitDrag(key,{startCallback=null,moveCallback=null,endCallback=null}={}){
+    static InitDrag(key,{startCallback=null,moveCallback=null,endCallback=null,scrollCallback=null}={}){
         key._drag_status = {
             startPos:{x:0,y:0}
             ,isDraging:false
@@ -219,7 +220,11 @@ class DragHelper{
         key.addEventListener("keyup",e=>{
             if(endCallback) endCallback.call(key,e);
             key._drag_status.isDraging = false;
-        })
+        });
+
+        key.addEventListener("scroll",e=>{
+            if(scrollCallback) scrollCallback.call(key,e.delta);
+        });
 
     }
 }

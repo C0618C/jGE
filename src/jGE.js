@@ -36,7 +36,7 @@ class jGE extends ShowObj{
         this.keyboards = new Set();
         this.__bind_helper(document.body,["keypress","keydown","keyup"],(e)=>{this.keyboards.forEach(kb=>{ kb.keyHandle(e);})});
         this.__bind_helper(setting.dom,["click","touchstart" in setting.dom?"touchstart":"mousedown",
-            "touchmove" in setting.dom?"touchmove":"mousemove","touchend" in setting.dom?"touchend":"mouseup"],(e)=>{
+            "touchmove" in setting.dom?"touchmove":"mousemove","touchend" in setting.dom?"touchend":"mouseup","mousewheel"],(e)=>{
             run.curMousePoint = GetEventPosition(e);
             this.keyboards.forEach(kb=>{ kb.pointHandle(e,run.curMousePoint);})
         });
@@ -170,7 +170,7 @@ class jGE extends ShowObj{
     //构造函数
     constructor(){
         super();
-        this.version = [4,4,1];//大版本不兼容，中版本加功能，小版本修bug
+        this.version = [4,5,1];//大版本不兼容，中版本加功能，小版本修bug
         this.setting = {};
         const run = this.run = {};//配置了运行时的变量、参数等
         this.temp = {};
