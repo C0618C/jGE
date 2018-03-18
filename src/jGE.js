@@ -156,6 +156,12 @@ class jGE extends ShowObj{
         return rsl;
     };
 
+    //开通消息模块
+    InitMessage(model){
+        model.on = this.on;
+        model.broadcast = this.broadcast;
+    }
+
     //提供鼠标事件绑定接口
     OnMouse(action,handler,target){
         this.setting.dom.addEventListener(action,target?handler.bind(target):handler);
@@ -170,7 +176,7 @@ class jGE extends ShowObj{
     //构造函数
     constructor(){
         super();
-        this.version = [4,5,1];//大版本不兼容，中版本加功能，小版本修bug
+        this.version = [4,5,2];//大版本不兼容，中版本加功能，小版本修bug
         this.setting = {};
         const run = this.run = {};//配置了运行时的变量、参数等
         this.temp = {};

@@ -88,11 +88,11 @@ class Vector2D {
     };
 
     //向量加
-    AddIn(v2){this.x+=v2.x;this.y+=v2.y;}
+    AddIn(v2){this.x+=v2.x;this.y+=v2.y;return this;}
     //向量减
-    MinusIn(v2){this.x-=v2.x;this.y-=v2.y;}
+    MinusIn(v2){this.x-=v2.x;this.y-=v2.y;return this;}
     //向量乘
-    MultiplyIn(a){this.x*=a;this.y*=a;}
+    MultiplyIn(a){this.x*=a;this.y*=a;return this;}
 
     //加
     Add(v2){return new Vector2D(this.x+v2.x,this.y+v2.y);}

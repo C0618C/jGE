@@ -122,11 +122,11 @@ class Vector2D {
     };
 
     //向量加
-    AddIn(v2){this.x+=v2.x;this.y+=v2.y;}
+    AddIn(v2){this.x+=v2.x;this.y+=v2.y;return this;}
     //向量减
-    MinusIn(v2){this.x-=v2.x;this.y-=v2.y;}
+    MinusIn(v2){this.x-=v2.x;this.y-=v2.y;return this;}
     //向量乘
-    MultiplyIn(a){this.x*=a;this.y*=a;}
+    MultiplyIn(a){this.x*=a;this.y*=a;return this;}
 
     //加
     Add(v2){return new Vector2D(this.x+v2.x,this.y+v2.y);}
@@ -147,7 +147,7 @@ class Vector2D {
 
 /*** 渲染对象类 ***/
 class ShowObj extends Vector2D{
-    constructor({x=0,y=0,angle = 0}={}){
+    constructor({x=0,y=0,angle = 0,obj=null}={}){
         super({x:x,y:y});
         let ObjManager = Symbol('ObjManager');
 
@@ -186,6 +186,8 @@ class ShowObj extends Vector2D{
 
         this.add = (...x)=>{this[ObjManager].add.bind(this)(...x);return this;}
         this.del = this[ObjManager].del.bind(this);
+
+        if(obj!=null) obj.forEach(o=>this.add(o));
     }
 
     update(t,pPos={x:0,y:0},angle=0){
@@ -480,6 +482,9 @@ class $tk_font extends $$tk_base{
     text(newText){
         this.text = newText;
     }
+    set fontColor(color){
+        this.fillStyle = color;
+    }
 }
 
 //视频部件
@@ -723,6 +728,12 @@ class jGE extends ShowObj{
         return rsl;
     };
 
+    //开通消息模块
+    InitMessage(model){
+        model.on = this.on;
+        model.broadcast = this.broadcast;
+    }
+
     //提供鼠标事件绑定接口
     OnMouse(action,handler,target){
         this.setting.dom.addEventListener(action,target?handler.bind(target):handler);
@@ -737,7 +748,7 @@ class jGE extends ShowObj{
     //构造函数
     constructor(){
         super();
-        this.version = [4,4,1];//大版本不兼容，中版本加功能，小版本修bug
+        this.version = [4,5,2];//大版本不兼容，中版本加功能，小版本修bug
         this.setting = {};
         const run = this.run = {};//配置了运行时的变量、参数等
         this.temp = {};

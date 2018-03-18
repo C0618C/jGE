@@ -1,6 +1,6 @@
 /*** 渲染对象类 ***/
 class ShowObj extends Vector2D{
-    constructor({x=0,y=0,angle = 0}={}){
+    constructor({x=0,y=0,angle = 0,obj=null}={}){
         super({x:x,y:y});
         let ObjManager = Symbol('ObjManager');
 
@@ -39,6 +39,8 @@ class ShowObj extends Vector2D{
 
         this.add = (...x)=>{this[ObjManager].add.bind(this)(...x);return this;}
         this.del = this[ObjManager].del.bind(this);
+
+        if(obj!=null) obj.forEach(o=>this.add(o));
     }
 
     update(t,pPos={x:0,y:0},angle=0){
@@ -332,6 +334,9 @@ class $tk_font extends $$tk_base{
     }
     text(newText){
         this.text = newText;
+    }
+    set fontColor(color){
+        this.fillStyle = color;
     }
 }
 
