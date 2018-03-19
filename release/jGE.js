@@ -915,7 +915,7 @@ class ResourceManager extends Manager {
         this.isLoading = true;
     }
 
-    LoadRes(packid = "default", { type = "image", url = "", id = "" } = {}) {
+    LoadRes(packid = "default", { type = "image", url = "", id = "" ,method="POST"} = {}) {
         let ray = this.package.get(packid);
         let rsy = this.processing.get(packid);
 
@@ -925,7 +925,7 @@ class ResourceManager extends Manager {
         }
 
         this.Ajax({
-            url: url, dataType: type
+            url: url, dataType: type,method:method
             , onprogress: (total, loaded) => {
                 total = total < loaded ? loaded : total;
                 rsy.set(id, { l: loaded, t: total });
