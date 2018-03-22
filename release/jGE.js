@@ -730,8 +730,9 @@ class jGE extends ShowObj{
 
     //开通消息模块
     InitMessage(model){
-        model.on = this.on;
-        model.broadcast = this.broadcast;
+        model.on = this.on.bind(this);
+        model.one = this.one.bind(this);
+        model.broadcast = this.broadcast.bind(this);
     }
 
     //提供鼠标事件绑定接口
@@ -748,7 +749,7 @@ class jGE extends ShowObj{
     //构造函数
     constructor(){
         super();
-        this.version = [4,5,2];//大版本不兼容，中版本加功能，小版本修bug
+        this.version = [4,5,5];//大版本不兼容，中版本加功能，小版本修bug
         this.setting = {};
         const run = this.run = {};//配置了运行时的变量、参数等
         this.temp = {};
@@ -802,13 +803,20 @@ class Manager{
         事件可以通过jGE对象的on/one/off方法绑定或解绑，各模块通过broadcast事件名称触发事件
         事件响应期为一个update处理周期，每次update结束后自动清空所有事件。
 */
-class EventManager extends Manager{
-    constructor(_jGE){
-        super(_jGE,"事件管理器");
+class EventManager extends Manager {
+    constructor(_jGE) {
+        super(_jGE, "事件管理器");
         this.eventQueue = new Map();        //长期事件处理对象
         this.eventOne = new Map();          //一次性事件对象
-        this.curEventSet = new Set();
-        this.curEventObj = new Map();
+
+        /**
+         * 事件处理顺序：broadcast的事件会进入waitEventSet进行等待，在下一个循环片中，waitEventSet事件会进入curEventSet执行。
+         * 执行完后——无论有无接收器处理，curEventSet里的事件将会全部清理，接待下一批事件。
+         */
+        this.waitEventSet = new Set();      //在排队的事件
+        this.watiEventObj = new Map();      //排队事件对应的参数
+        this.curEventSet = new Set();       //正在等待处理的事件
+        this.curEventObj = new Map();       //事件对应的参数
 
         this._jGE = _jGE;
         _jGE.on = this.on.bind(this);
@@ -817,45 +825,53 @@ class EventManager extends Manager{
     }
 
     //绑定事件
-    on(listenEvent,callback){
+    on(listenEvent, callback) {
         let eq = this.eventQueue.get(listenEvent);
-        if(!eq) this.eventQueue.set(listenEvent,eq = []);
+        if (!eq) this.eventQueue.set(listenEvent, eq = []);
         eq.push(callback);
     }
-    one(listenEvent,callback){
+    one(listenEvent, callback) {
         let eq = this.eventOne.get(listenEvent);
-        if(!eq) this.eventOne.set(listenEvent,eq = []);
+        if (!eq) this.eventOne.set(listenEvent, eq = []);
         eq.push(callback);
     }
 
     //解绑事件
-    off(listenEvent){
-        this.eventQueue.set(listenEvent,[]);
+    off(listenEvent) {
+        this.eventQueue.set(listenEvent, []);
     }
 
-    broadcast(myEvent,param=undefined){
-        this.curEventSet.add(myEvent);
-        this.curEventObj.set(myEvent,param);
+    broadcast(myEvent, param = undefined) {
+        this.waitEventSet.add(myEvent);
+        this.watiEventObj.set(myEvent, param);
 
-        //console.debug(`发射事件  ${myEvent},事件参数：${JSON.stringify( param)}`)
+        // console.info(`发射事件  ${myEvent},事件参数：${JSON.stringify( param)}`)
+        // console.log("当前事件配置：",[...this.eventQueue.keys()],[...this.eventOne.keys()])
     }
 
     //定时
-    update(t){
-        let debugLog = new Function(); //(eventName,handler)=>{console.log(`捕获事件${eventName},处理者：`),console.trace(handler)};
+    update(t) {
+        if (this.waitEventSet.size > 0) {
+            this.curEventSet = this.waitEventSet;
+            this.curEventObj = this.watiEventObj;
+            this.waitEventSet = new Set();
+            this.watiEventObj = new Map();
+        }
+        let debugLog = () => { };//(eventName,handler)=>{console.log(`捕获事件${eventName},处理者：`),console.trace(handler)};
         //事件轮询
-        for(let e of this.eventQueue.keys()){
-            if(this.curEventSet.has(e)){
+        for (let e of this.eventQueue.keys()) {
+            //if(this.curEventSet.size!=0) console.log(e,[...this.curEventSet])
+            if (this.curEventSet.has(e)) {
                 let fA = this.eventQueue.get(e);
                 let event = this.curEventObj.get(e);
-                fA.forEach(f=>{f(event),debugLog(e,f)});      //DEBUG: 打印事件捕获情况
+                fA.forEach(f => { f(event), debugLog(e, f) });      //DEBUG: 打印事件捕获情况
             }
         }
-        for(let e of this.eventOne.keys()){
-            if(this.curEventSet.has(e)){
+        for (let e of this.eventOne.keys()) {
+            if (this.curEventSet.has(e)) {
                 let fA = this.eventOne.get(e);
                 let event = this.curEventObj.get(e);
-                fA.forEach(f=>{f(event),debugLog(e,f)});      //DEBUG: 打印事件捕获情况
+                fA.forEach(f => { f(event), debugLog(e, f) });      //DEBUG: 打印事件捕获情况
                 this.eventOne.delete(e);
             }
         }
@@ -931,7 +947,7 @@ class ResourceManager extends Manager {
                 rsy.set(id, { l: loaded, t: total });
             }
         }).then(obj => {
-            obj.id = id;
+            if(type != "json") obj.id = id;
             ray.set(id, obj);
             ///console.log("finish:", obj);
         }).catch(e => {
@@ -1037,7 +1053,7 @@ class ResourceManager extends Manager {
                 if (this.status == 200 || this.status == 304) {
                     let rsp = null;
                     // console.log(this.response);
-                    if (!async && dataType == "json") rsp = JSON.parse(this.response);
+                    if (dataType == "json") rsp = JSON.parse(this.response);
                     else {
                         rsp = document.createElement(dataType);
                         if (dataType == "script") {
@@ -1049,6 +1065,8 @@ class ResourceManager extends Manager {
                         }
                     }
                     resolve.call(this, rsp);
+                }else if(this.status == 404){
+                    reject.call(this, this.response);
                 }
             };
             xhr.onerror = reject;

@@ -63,7 +63,7 @@ class ResourceManager extends Manager {
                 rsy.set(id, { l: loaded, t: total });
             }
         }).then(obj => {
-            obj.id = id;
+            if(type != "json") obj.id = id;
             ray.set(id, obj);
             ///console.log("finish:", obj);
         }).catch(e => {
@@ -169,7 +169,7 @@ class ResourceManager extends Manager {
                 if (this.status == 200 || this.status == 304) {
                     let rsp = null;
                     // console.log(this.response);
-                    if (!async && dataType == "json") rsp = JSON.parse(this.response);
+                    if (dataType == "json") rsp = JSON.parse(this.response);
                     else {
                         rsp = document.createElement(dataType);
                         if (dataType == "script") {
@@ -181,6 +181,8 @@ class ResourceManager extends Manager {
                         }
                     }
                     resolve.call(this, rsp);
+                }else if(this.status == 404){
+                    reject.call(this, this.response);
                 }
             };
             xhr.onerror = reject;
