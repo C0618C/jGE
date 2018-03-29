@@ -2,33 +2,34 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>jGE - Demo</title>
-    <script src="release/jGE.js"></script>
-    <script src="Test/UnitTest.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>jGE</title>
+    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <style>
         * {padding: 0px;margin: 0px;}
         body{overflow: hidden;}
         #fork_me{position: fixed;top:0px;right: 0px;z-index: 9999; }
     </style>
+    <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdn.bootcss.com/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://cdn.bootcss.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 </head>
 <body>
 <div id="view_port"></div>
 <div id="fork_me"><a href="https://github.com/C0618C/jGE"><img src="Test/forkme-on-github-right.png" title="trun to github"/></a></div>
 
-<script src="src/Availability.js"></script>
-
 <script>
-    (function(){
-        if(typeof Symbol == typeof undefined) window.location.href = "jGE_ES5.html";
+    // (function(){
+    //     if(typeof Symbol == typeof undefined) window.location.href = "jGE_ES5.html";
 
-        let x = new jGE({width:document.documentElement.clientWidth
-        ,height:document.documentElement.clientHeight});
-        document.getElementById("view_port").appendChild(x.GetDom());
-        window.t  = x;
+    //     let x = new jGE({width:document.documentElement.clientWidth
+    //     ,height:document.documentElement.clientHeight});
+    //     document.getElementById("view_port").appendChild(x.GetDom());
+    //     window.t  = x;
 
-        x.on("jGE.Scene.Logo.End",()=>UT.Auto_Test(x));
+    //     x.on("jGE.Scene.Logo.End",()=>UT.Auto_Test(x));
         
-    })();
+    // })();
 </script>
 </body>
 </html>
