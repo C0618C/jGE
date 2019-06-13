@@ -4,7 +4,7 @@
 function GetConfig() {
     let config={
         id:"jGE_"+Math.random()*100,dom:null,
-        width:700,height:750,
+        width:1280,height:640,
         fps:30,
         isRoundWorld:true,
         keyHandler:function (event) {}

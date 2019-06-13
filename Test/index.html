@@ -4,16 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <title>jGE Test</title>
-    <script src="../lib/vector2d.js"></script>
-    <script src="../lib/ShowObj.js"></script>
-    <script src="../lib/jGE.js"></script>
-    <script src="../lib/EventManager.js"></script>
-    <script src="../lib/ObjectFactory.js"></script>
-    <script src="../lib/ResManager.js"></script>
-    <script src="../lib/SceneManager.js"></script>
-    <script src="../lib/jGE.config.js"></script>
-    <script src="../lib/tool.js"></script>
-    <script src="../lib/jGE.Debug.js"></script>
+    <script src="../src/vector2d.js"></script>  
+    <script src="../src/ShowObj.js"></script>
+    <script src="../src/jGE.js"></script>
+    <script src="../src/EventManager.js"></script>
+    <script src="../src/ResourceManager.js"></script>
+    <script src="../src/SceneManager.js"></script>
+    <script src="../src/jGE.config.js"></script>
+    <script src="../src/tool.js"></script>
+    <script src="../src/jGE.Debug.js"></script>
     <style>
         * {
             padding: 0px;
@@ -35,6 +34,7 @@
             //if (typeof Symbol == typeof undefined) window.location.href = "jGE_ES5.html";
 
             let _jGE = new jGE();
+            //_jGE.run.iDBug =false;
             let vp = document.getElementById("view_port");
             vp.appendChild(_jGE.GetDom());
 
@@ -44,9 +44,10 @@
             obj1.add(new $tk_ellipse({
                 styleType: 'stroke', style: `white 1`,a:100,b:200
             }));
+            
             //可选加入其它部件
             //...
-            _jGE.add(obj1);//加入到场景
+            //_jGE.add(obj1);//加入到场景
 
         })();
     </script>

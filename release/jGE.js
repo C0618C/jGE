@@ -1119,7 +1119,7 @@ class SceneManager extends Manager{
 
     //用于显示Logo的场景
     Logo(){
-        let u = function(){this.angle=0;};
+
         let u2 = function(){this.angle=0;};
         console.log("开始Logo展示 🐉 jGE");
         let font = '180px \'微软雅黑\'';

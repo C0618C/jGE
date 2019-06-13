@@ -38,6 +38,8 @@
         render(){
             super.render();
 
+            if(!this.run.iDBug) return;
+
             const lh = 16;
             let idx = 1;
             const run = this.run;
@@ -55,7 +57,7 @@
                 run.context2D.fillText(`+Pos:(${run.curMousePoint.x},${run.curMousePoint.y})`, 0, lh*idx++);
             }
 
-            if(run.debug.showLoadedProcess) run.context2D.fillText(`Loading:${this.ResManager.GetProcessing()}%`, 0, lh*idx++);
+            if(run.debug.showLoadedProcess) run.context2D.fillText(`Loading:${this.ResourceManager.GetProcessing()}%`, 0, lh*idx++);
 
             run.context2D.fillText(`Ver:${this.version.join(".")}`, 0, lh*idx++);
             run.debug.msg.forEach(m=> run.context2D.fillText(`mgs:${m}`, 0, lh*idx++));
