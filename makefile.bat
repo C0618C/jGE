@@ -17,7 +17,7 @@ echo 本文件用于初始化项目的工作环境
 
 
 title Step 2
-set packages= gulp  gulp-concat  gulp-uglify  uglify-es  del  opn
+set packages= gulp  gulp-concat  gulp-uglify  uglify-es  del  open
 
 echo.
 echo.

@@ -9,7 +9,7 @@ var minify = composer(uglifyes, console);
 // let isHightAvailability = false;
 
 let model = [
-     "./src/tool.js"
+    "./src/tool.js"
     , "./src/vector2d.js"
     , "./src/ShowObj.js"
     , "./src/jGE.js"
@@ -31,30 +31,31 @@ gulp.task('clean', function () {
 });
 
 
-gulp.task('jGE-Full', ['clean'], function (cb) {
+gulp.task('jGE-Full', gulp.series('clean', function (cb) {
     let rsl = gulp.src(model)
         .pipe(concat('jGE.js'))
         .pipe(gulp.dest('./release/'));
     return rsl;
-});
+})
+);
 
-gulp.task('jGE-min', ['jGE-Full'], function () {
+gulp.task('jGE-min', gulp.series('jGE-Full', function () {
     return gulp.src("./release/jGE.js")
         .pipe(concat('jGE.min.js'))
         .pipe(minify({}))
         .pipe(gulp.dest('./release/'));
-});
+}));
 
-gulp.task('AvailabilityCheck', ['jGE-min'], function () {
-    if(isHightAvailability){
-        gulp.src(["./src/Availability.js","./release/jGE.js"])
-        .pipe(concat('jGE.js'))
-        .pipe(gulp.dest('./release/'));
+gulp.task('AvailabilityCheck', gulp.series('jGE-min', function () {
+    if (isHightAvailability) {
+        gulp.src(["./src/Availability.js", "./release/jGE.js"])
+            .pipe(concat('jGE.js'))
+            .pipe(gulp.dest('./release/'));
 
-        return gulp.src(["./src/Availability.js","./release/jGE.min.js"])
-        .pipe(concat('jGE.min.js'))
-        .pipe(gulp.dest('./release/'));
+        return gulp.src(["./src/Availability.js", "./release/jGE.min.js"])
+            .pipe(concat('jGE.min.js'))
+            .pipe(gulp.dest('./release/'));
     }
-});
+}));
 
-gulp.task('default', ['clean', 'jGE-Full', 'jGE-min'/*,'AvailabilityCheck'*/]);
+gulp.task('default', gulp.parallel('jGE-Full', 'jGE-min'/*,'AvailabilityCheck'*/));
